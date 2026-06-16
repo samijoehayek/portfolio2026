@@ -1,0 +1,261 @@
+---
+import Logo from "./Logo.astro";
+
+// nav links — label + href + the word it swaps to on hover
+const links = [
+  { label: "WORK", href: "#work", alt: "WORK" },
+  { label: "SERVICES", href: "#services", alt: "SERVICES" },
+  { label: "ABOUT", href: "#about", alt: "ABOUT" },
+  { label: "CONTACT", href: "#contact", alt: "CONTACT" },
+  { label: "LAB", href: "#lab", alt: "LAB", lab: true },
+];
+
+const cta = { label: "LET'S TALK", alt: "FUN STUFF", href: "#contact" };
+
+// split a string into an array of chars, preserving spaces as non-breaking
+const chars = (s: string) => [...s].map((c) => (c === " " ? " " : c));
+---
+
+<header class="site-header" data-header>
+  <a class="logo-link" href="#top" aria-label="Home">
+    <Logo size={44} />
+  </a>
+
+  <nav class="site-header-nav" aria-label="Primary">
+    {
+      links.map((link) => (
+        <a
+          class="site-header-nav-link"
+          href={link.href}
+          data-nav-link
+          data-lab-nav-link={link.lab ? "" : undefined}
+        >
+          <span class="menu-text menu-text-1" aria-hidden="true">
+            {chars(link.label).map((ch) => (
+              <span class="menu-char-wrap">
+                <span class="menu-char">{ch}</span>
+              </span>
+            ))}
+          </span>
+          <span class="menu-text menu-text-2" aria-hidden="true">
+            {chars(link.alt).map((ch) => (
+              <span class="menu-char-wrap">
+                <span class="menu-char">{ch}</span>
+              </span>
+            ))}
+          </span>
+          <span class="sr-only">{link.label}</span>
+        </a>
+      ))
+    }
+  </nav>
+
+  <a class="site-header-cta" href={cta.href} data-nav-link>
+    <span class="menu-text menu-text-1" aria-hidden="true">
+      {
+        chars(cta.label).map((ch) => (
+          <span class="menu-char-wrap">
+            <span class="menu-char">{ch}</span>
+          </span>
+        ))
+      }
+    </span>
+    <span class="menu-text menu-text-2" aria-hidden="true">
+      {
+        chars(cta.alt).map((ch) => (
+          <span class="menu-char-wrap">
+            <span class="menu-char">{ch}</span>
+          </span>
+        ))
+      }
+    </span>
+    <span class="sr-only">{cta.label}</span>
+  </a>
+</header>
+
+<style>
+  /* registered length so the gold ring's thickness can animate smoothly */
+  @property --gold-w {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 0px;
+  }
+
+  .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--header-h);
+    z-index: var(--z-header);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: var(--gutter);
+    background: var(--c-blue);
+    border-bottom: var(--border);
+  }
+
+  .logo-link {
+    display: flex;
+    align-items: center;
+    color: var(--c-black);
+  }
+
+  .site-header-nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(1.5rem, 3vw, 3rem);
+    margin-left: auto;
+    padding-right: clamp(1.5rem, 3vw, 3rem);
+  }
+
+  /* ── per-character swap link ─────────────────────────────── */
+  .site-header-nav-link,
+  .site-header-cta {
+    position: relative;
+    display: inline-flex;
+    color: var(--c-black);
+    font-family: var(--font-nav);
+    font-weight: 400; /* Anton ships a single heavy weight */
+    text-transform: uppercase;
+    font-size: 1.8rem;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    overflow: hidden;
+  }
+
+  .menu-text {
+    display: inline-flex;
+  }
+  /* text-2 is stacked on top of text-1, waiting below */
+  .menu-text-2 {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .menu-char-wrap {
+    overflow: hidden;
+    display: inline-block;
+    /* optical nudge: Anton sits high in its line-box, push glyphs down */
+    position: relative;
+    top: 0.09em;
+  }
+  .menu-char {
+    display: inline-block;
+    will-change: transform;
+  }
+
+  /* ── CTA block (flush right, full height, left divider) ──── */
+  .site-header-cta {
+    --gold-w: 0px;
+    position: relative;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 0 clamp(1.25rem, 2vw, 2rem);
+    background: var(--c-blue);
+    color: var(--c-black);
+    border-left: var(--border);
+    transition:
+      background 0.28s ease-out,
+      color 0.28s ease-out;
+  }
+
+  /* gold ring: anchored flush inside each black edge, grows its thickness
+     0 → 8px (the outer-frame width) on hover via an inset box-shadow.
+     top & right are inset by --frame-w to clear the 8px outer frame; bottom &
+     left are 0 because those 3px black lines already lie outside the button's
+     padding box, so the ring sits directly inside them. */
+  .site-header-cta::after {
+    content: "";
+    position: absolute;
+    inset: var(--frame-w) var(--frame-w) 0 0;
+    box-shadow: inset 0 0 0 var(--gold-w) var(--c-gold);
+    pointer-events: none;
+    transition: --gold-w 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .site-header-cta:hover,
+  .site-header-cta:focus-visible {
+    --gold-w: 5px;
+    background: var(--c-black);
+    color: var(--c-gold);
+    /* the animated gold ring is the focus affordance; suppress the global
+       :focus-visible outline so it doesn't double up */
+    outline: none;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
+
+<script>
+  import { gsap } from "gsap";
+
+  const DUR = 0.38;
+  const STAGGER = 0.025;
+
+  function initLink(link: HTMLElement) {
+    const c1 = link.querySelectorAll<HTMLElement>(".menu-text-1 .menu-char");
+    const c2 = link.querySelectorAll<HTMLElement>(".menu-text-2 .menu-char");
+    if (!c1.length) return;
+
+    // start state: text-1 visible, text-2 waiting below the mask
+    gsap.set(c2, { yPercent: 100 });
+
+    const enter = () => {
+      gsap.to(c1, {
+        yPercent: -100,
+        duration: DUR,
+        stagger: STAGGER,
+        ease: "power3.inOut",
+        overwrite: true,
+      });
+      gsap.to(c2, {
+        yPercent: 0,
+        duration: DUR,
+        stagger: STAGGER,
+        ease: "power3.inOut",
+        overwrite: true,
+      });
+    };
+    const leave = () => {
+      gsap.to(c1, {
+        yPercent: 0,
+        duration: DUR,
+        stagger: STAGGER,
+        ease: "power3.inOut",
+        overwrite: true,
+      });
+      gsap.to(c2, {
+        yPercent: 100,
+        duration: DUR,
+        stagger: STAGGER,
+        ease: "power3.inOut",
+        overwrite: true,
+      });
+    };
+
+    link.addEventListener("mouseenter", enter);
+    link.addEventListener("mouseleave", leave);
+    link.addEventListener("focus", enter);
+    link.addEventListener("blur", leave);
+  }
+
+  document
+    .querySelectorAll<HTMLElement>("[data-nav-link]")
+    .forEach(initLink);
+</script>

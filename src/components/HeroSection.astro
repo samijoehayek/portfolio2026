@@ -1,0 +1,282 @@
+---
+// Interactive hero: layered illustration (clouds + character + coins) that
+// reacts to the cursor — eyes track, head tilts, blinks, clouds & coins drift.
+// Built from the cut PNG layers in /public/hero/*.webp.
+const bio = {
+  name: "Samijoe Hayek",
+  role: "full-stack & blockchain developer and consultant",
+  location: "Dubai, UAE",
+};
+---
+
+<section class="hero" id="top" data-hero>
+  <!-- sky / clouds background (full-bleed, drifts + parallax) -->
+  <div class="hero__sky" data-sky aria-hidden="true">
+    <img class="hero__clouds" src="/hero/clouds.webp" alt="" decoding="async" />
+  </div>
+
+  <!-- floating coin constellation -->
+  <div class="hero__coins" aria-hidden="true">
+    <img class="coin coin--1" src="/hero/coin.webp" alt="" data-coin decoding="async" />
+    <img class="coin coin--2" src="/hero/coin.webp" alt="" data-coin decoding="async" />
+    <img class="coin coin--3" src="/hero/coin.webp" alt="" data-coin decoding="async" />
+  </div>
+
+  <!-- character (right) -->
+  <div class="hero__character" data-character>
+    <div class="char" data-char>
+      <img class="char__layer" src="/hero/body.webp" alt="" decoding="async" />
+      <div class="char__head" data-head>
+        <img class="char__layer" src="/hero/head-base.webp" alt="" decoding="async" />
+        <img class="char__layer" src="/hero/eye-whites.webp" alt="" decoding="async" />
+        <!-- pupils clipped to the eye-white shape so they can never leave the socket -->
+        <div class="char__layer char__eyeclip">
+          <img class="char__pupils" src="/hero/pupils.webp" alt="" data-pupils decoding="async" />
+        </div>
+        <img class="char__layer char__eyelids" src="/hero/eyelids.webp" alt="" data-eyelids decoding="async" />
+      </div>
+    </div>
+    <span class="sr-only">Cartoon illustration of {bio.name}</span>
+  </div>
+
+  <!-- glass bio panel (left): two equal halves split by a dashed rule -->
+  <div class="hero__panel">
+    <div class="hero__panel-top">
+      <h1 class="hero__title">HEY!</h1>
+    </div>
+    <div class="hero__panel-bottom">
+      <p class="hero__bio">
+        You've reached the portfolio of <strong>{bio.name}</strong> — a {bio.role}
+        based in {bio.location}. Feel free to explore my work and a few of my
+        favourite things.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background: var(--c-blue);
+    color: var(--c-black);
+  }
+
+  /* ── sky / clouds ─────────────────────────────────────── */
+  .hero__sky {
+    position: absolute;
+    inset: -3.5% -3.5% -3.5% -3.5%; /* slight oversize for drift/parallax room */
+    z-index: 1;
+    translate: var(--cx, 0) var(--cy, 0); /* JS parallax (independent of drift) */
+  }
+  .hero__clouds {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: cloudDrift 55s ease-in-out infinite; /* uses transform */
+  }
+  @keyframes cloudDrift {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-3%); }
+  }
+
+  /* ── coins ────────────────────────────────────────────── */
+  .hero__coins {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .coin {
+    position: absolute;
+    height: auto;
+    translate: var(--coinx, 0) var(--coiny, 0); /* JS parallax */
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
+    will-change: transform, translate;
+  }
+  .coin--1 { top: 15%; left: 51%; width: clamp(50px, 7vw, 112px); animation: bob 5s ease-in-out infinite, sway 7s ease-in-out infinite; }
+  .coin--2 { top: 41%; left: 60%; width: clamp(34px, 5vw, 78px); animation: bob 6.5s ease-in-out infinite -1s, sway 9s ease-in-out infinite; }
+  .coin--3 { top: 43%; left: 45%; width: clamp(24px, 3.6vw, 56px); animation: bob 4.2s ease-in-out infinite -2s, sway 6s ease-in-out infinite; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+  @keyframes sway { 0%, 100% { rotate: -6deg; } 50% { rotate: 6deg; } }
+
+  /* ── character ────────────────────────────────────────── */
+  .hero__character {
+    position: absolute;
+    bottom: 0;
+    right: clamp(0px, 2vw, 70px);
+    height: clamp(440px, 90vh, 1000px);
+    aspect-ratio: 896 / 1200;
+    z-index: 3;
+  }
+  .char,
+  .char__head {
+    position: absolute;
+    inset: 0;
+  }
+  .char__layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  /* head group: very subtle tilt, pivoting low at the neck so the neck
+     cut never opens a gap (set by JS) */
+  .char__head {
+    transform: rotate(var(--hr, 0deg));
+    transform-origin: 50% 88%;
+    will-change: transform;
+  }
+  /* eye socket clip: masks the pupils to the eye-white shape, so the pupils
+     stay inside the eyes no matter how far they track */
+  .char__eyeclip {
+    -webkit-mask: url("/hero/eye-whites.webp") center / 100% 100% no-repeat;
+    mask: url("/hero/eye-whites.webp") center / 100% 100% no-repeat;
+  }
+  .char__pupils {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform: translate(var(--px, 0), var(--py, 0));
+    will-change: transform;
+  }
+  /* eyelids: hidden at rest; blink = a quick, crisp close */
+  .char__eyelids {
+    opacity: 0;
+    transition: opacity 45ms ease;
+  }
+  .char__eyelids.is-closed { opacity: 1; }
+
+  /* ── glass bio panel ──────────────────────────────────── */
+  .hero__panel {
+    position: absolute;
+    top: 60%;
+    left: clamp(1rem, 5vw, 5rem);
+    transform: translateY(-50%);
+    width: clamp(320px, 42vw, 600px);
+    min-height: clamp(290px, 42vh, 430px);
+    z-index: 4;
+    display: grid;
+    grid-template-rows: 1fr 1fr; /* two equal halves */
+    background: color-mix(in srgb, var(--c-white) 7%, transparent);
+    backdrop-filter: blur(7px) saturate(112%);
+    -webkit-backdrop-filter: blur(7px) saturate(112%);
+    border: var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    color: var(--c-black);
+  }
+  .hero__panel-top,
+  .hero__panel-bottom {
+    display: grid;
+    align-items: center;
+    padding: clamp(0.85rem, 2.2vw, 1.7rem);
+  }
+  /* full-width dashed rule sits exactly between the two equal halves */
+  .hero__panel-bottom {
+    border-top: 2px dashed var(--c-black);
+  }
+  .hero__title {
+    font-family: var(--font-display);
+    font-size: clamp(4rem, 12vw, 9rem);
+    line-height: 0.82;
+    letter-spacing: 0.02em;
+    /* stretch the wordmark to nearly fill the width of its half (no extra height) */
+    transform: scaleX(1.42);
+    transform-origin: left center;
+  }
+  .hero__bio {
+    font-size: clamp(0.95rem, 1.3vw, 1.2rem);
+    line-height: 1.5;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0);
+    white-space: nowrap; border: 0;
+  }
+
+  /* ── mobile: stack panel over a smaller character ─────── */
+  @media (max-width: 860px) {
+    .hero__character {
+      height: 62vh;
+      right: 50%;
+      transform: translateX(50%);
+      opacity: 0.9;
+    }
+    .hero__panel {
+      top: auto;
+      bottom: clamp(1.5rem, 6vw, 3rem);
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(92vw, 460px);
+    }
+    .backdrop-filter { backdrop-filter: blur(10px); }
+  }
+</style>
+
+<script>
+  const hero = document.querySelector<HTMLElement>("[data-hero]");
+  if (hero) {
+    const head = hero.querySelector<HTMLElement>("[data-head]");
+    const pupils = hero.querySelector<HTMLElement>("[data-pupils]");
+    const eyelids = hero.querySelector<HTMLElement>("[data-eyelids]");
+    const sky = hero.querySelector<HTMLElement>("[data-sky]");
+    const coins = Array.from(hero.querySelectorAll<HTMLElement>("[data-coin]"));
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!reduce && head && pupils && sky) {
+      let tx = 0, ty = 0, cx = 0, cy = 0;
+      const coinFactors = [12, 7, 16];
+
+      window.addEventListener(
+        "pointermove",
+        (e) => {
+          tx = (e.clientX / window.innerWidth) * 2 - 1;
+          ty = (e.clientY / window.innerHeight) * 2 - 1;
+        },
+        { passive: true },
+      );
+
+      const loop = () => {
+        cx += (tx - cx) * 0.08;
+        cy += (ty - cy) * 0.08;
+
+        pupils.style.setProperty("--px", `${(cx * 2.5).toFixed(2)}px`);
+        pupils.style.setProperty("--py", `${(cy * 1.2).toFixed(2)}px`);
+        head.style.setProperty("--hr", `${(cx * 0.4).toFixed(2)}deg`);
+        sky.style.translate = `${(cx * -9).toFixed(2)}px ${(cy * -5).toFixed(2)}px`;
+        coins.forEach((c, i) => {
+          const f = coinFactors[i] ?? 18;
+          c.style.translate = `${(cx * f).toFixed(2)}px ${(cy * f * 0.6).toFixed(2)}px`;
+        });
+
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+
+      // natural random blink
+      if (eyelids) {
+        const blink = () => {
+          eyelids.classList.add("is-closed");
+          setTimeout(() => eyelids.classList.remove("is-closed"), 110);
+        };
+        const schedule = () => {
+          setTimeout(() => {
+            blink();
+            // occasional double-blink
+            if (Math.random() < 0.25) setTimeout(blink, 280);
+            schedule();
+          }, 2600 + Math.random() * 3800);
+        };
+        schedule();
+      }
+    }
+  }
+</script>

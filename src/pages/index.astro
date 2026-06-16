@@ -1,0 +1,31 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import HeroSection from "../components/HeroSection.astro";
+---
+
+<Layout title="Portfolio — Navbar">
+  <Header />
+
+  <main id="top">
+    <HeroSection />
+    <section class="probe" id="services">SERVICES</section>
+    <section class="probe probe--gold" id="about">ABOUT</section>
+  </main>
+</Layout>
+
+<style>
+  .probe {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 6vw, 5rem);
+    text-transform: uppercase;
+    color: var(--c-white);
+  }
+  .probe--gold {
+    background: var(--c-gold);
+    color: var(--c-black);
+  }
+</style>

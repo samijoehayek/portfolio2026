@@ -1,0 +1,23 @@
+:root {
+  /* ── color ─────────────────────────────────────────────── */
+  --c-blue: #2b47ff; /* header + hero background (rgb 43,71,255) */
+  --c-gold: #ffae00; /* CTA button, accents (rgb 255,174,0) */
+  --c-black: #000000; /* borders + text */
+  --c-white: #ffffff; /* loader background */
+
+  /* ── structure ─────────────────────────────────────────── */
+  --bw: 3px; /* inner lines: navbar bottom divider, CTA left divider */
+  --frame-w: 8px; /* outer viewport frame */
+  --border: var(--bw) solid var(--c-black); /* the signature inner line */
+  --header-h: 6rem; /* ~96px tall header */
+  --gutter: 1.8rem; /* ~29px horizontal padding */
+
+  /* ── type ──────────────────────────────────────────────── */
+  --font-sans: "Space Grotesk", system-ui, sans-serif; /* body */
+  --font-nav: "Anton", "Archivo", sans-serif; /* nav links (tall + condensed) */
+  --font-display: "Anton", "Space Grotesk", sans-serif; /* the giant "HEY!" */
+
+  /* ── z-index scale ─────────────────────────────────────── */
+  --z-header: 1000;
+  --z-loader: 9999999;
+}

@@ -1,0 +1,51 @@
+---
+// PLACEHOLDER logo — temporary abstract bar mark.
+// Swap for the real SajeLabs logo when supplied. Built as 4 independent
+// vertical slices so the loader can assemble it bar-by-bar.
+interface Props {
+  size?: number; // rendered height in px
+  class?: string;
+}
+const { size = 40, class: className = "" } = Astro.props;
+
+// viewBox is 60 wide x 50 tall; each slice is its own <rect>.
+const slices = [
+  { x: 0, y: 18, w: 12, h: 32, r: 6 }, // short, rounded outer-left
+  { x: 16, y: 6, w: 12, h: 44, r: 2 }, // tall
+  { x: 32, y: 12, w: 12, h: 38, r: 2 }, // mid
+  { x: 48, y: 22, w: 12, h: 28, r: 6 }, // short, rounded outer-right
+];
+---
+
+<svg
+  class={`logo ${className}`}
+  width={(size * 60) / 50}
+  height={size}
+  viewBox="0 0 60 50"
+  role="img"
+  aria-label="Home"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  {
+    slices.map((s, i) => (
+      <rect
+        class="logo__slice"
+        data-slice={i}
+        x={s.x}
+        y={s.y}
+        width={s.w}
+        height={s.h}
+        rx={s.r}
+        fill="currentColor"
+      />
+    ))
+  }
+</svg>
+
+<style>
+  .logo {
+    color: var(--c-black);
+    display: block;
+  }
+</style>

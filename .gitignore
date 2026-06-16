@@ -1,0 +1,29 @@
+# build output
+dist/
+.output/
+
+# dependencies
+node_modules/
+
+# astro
+.astro/
+
+# logs
+*.log
+npm-debug.log*
+
+# environment
+.env
+.env.production
+
+# macOS
+.DS_Store
+
+# working assets — personal reference photos + large source PSDs/PNGs.
+# The site only needs the optimized files in public/hero/, which ARE committed.
+assets/
+
+# local tooling / agent skills / editor + session config
+.agents/
+.claude/
+skills-lock.json
