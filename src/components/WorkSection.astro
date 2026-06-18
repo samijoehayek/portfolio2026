@@ -1,0 +1,231 @@
+---
+// Work section — CLEAN SLATE.
+// The illustrated landscape (hills / road / character) was scrapped; all of its
+// generated image assets were removed. For now this is just the project card on
+// an empty background while we redesign the scene behind it.
+//
+// Phase 1: static placeholder card (the carousel + in-card distortion shader
+// come in later phases). Sample project data below is a stand-in.
+const project = {
+  index: "01",
+  total: "06",
+  client: "VYVE",
+  tags: ["BRANDING", "STRATEGY"],
+};
+---
+
+<section class="work" id="work" data-work aria-label="Selected work">
+  <!-- giant WORK wordmark, partly hidden behind the card -->
+  <span class="work__word" aria-hidden="true">WORK</span>
+
+  <!-- the project card -->
+  <article class="work__card" data-card>
+    <header class="card__head">
+      <span class="card__wordmark">{project.client}</span>
+    </header>
+
+    <div class="card__body">
+      <div class="card__info">
+        <p class="card__label">CLIENT</p>
+        <p class="card__client">{project.client}</p>
+        <div class="card__rule"></div>
+        <ul class="card__tags">
+          {project.tags.map((t) => <li>{t}</li>)}
+        </ul>
+        <a class="card__cta" href="#">
+          <span>VIEW WORK</span>
+          <span class="card__arrow">&rarr;</span>
+        </a>
+        <span class="card__count">{project.index}/{project.total}</span>
+      </div>
+
+      <!-- preview pane (the in-card distortion shader lands here later) -->
+      <div class="card__preview" aria-hidden="true">
+        <span class="card__preview-mark">{project.client}</span>
+      </div>
+    </div>
+  </article>
+
+  <span class="sr-only">Selected work — featuring {project.client}.</span>
+</section>
+
+<style>
+  .work {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background: var(--c-blue);
+    color: var(--c-black);
+    display: grid;
+    place-items: center;
+    /* same divider as the navbar between sections */
+    border-top: var(--border);
+  }
+
+  /* ── giant WORK wordmark ───────────────────────────────── */
+  .work__word {
+    position: absolute;
+    top: 12%;
+    right: clamp(2rem, 8vw, 11rem);
+    transform: translateY(-50%);
+    z-index: 2;
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 17vw, 16rem);
+    line-height: 0.8;
+    letter-spacing: 0.05em; /* looser tracking reads a touch lighter */
+    color: color-mix(in srgb, var(--c-white) 90%, transparent);
+    user-select: none;
+  }
+
+  /* ── the card ─────────────────────────────────────────── */
+  .work__card {
+    position: relative;
+    z-index: 3;
+    width: min(86vw, 1180px);
+    border: var(--frame-w) solid var(--c-black);
+    background: var(--c-white);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.28);
+  }
+  .card__head {
+    background: var(--c-black);
+    padding: clamp(0.6rem, 2vw, 1.4rem) clamp(1rem, 2.5vw, 2rem);
+  }
+  .card__wordmark {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 7vw, 6rem);
+    line-height: 0.85;
+    color: var(--c-white);
+    letter-spacing: 0.02em;
+  }
+  .card__body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: clamp(320px, 40vw, 560px);
+  }
+  .card__info {
+    position: relative;
+    padding: clamp(1rem, 2.4vw, 2rem);
+    border-right: var(--border);
+    background: color-mix(in srgb, var(--c-black) 6%, var(--c-white));
+    display: grid;
+    align-content: start;
+    gap: clamp(0.5rem, 1.4vw, 1rem);
+  }
+  .card__label {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+  }
+  .card__client {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.5vw, 3.5rem);
+    line-height: 0.9;
+  }
+  .card__rule { height: var(--bw); background: var(--c-black); margin: 0.4rem 0; }
+  .card__tags {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2.5rem);
+    list-style: none;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+  }
+  .card__tags li { position: relative; padding-top: 0.7rem; }
+  .card__tags li::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 5px solid transparent;
+    border-top-color: var(--c-black);
+  }
+  .card__cta {
+    margin-top: clamp(1rem, 4vw, 2.5rem);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: var(--border);
+    padding: clamp(0.7rem, 1.6vw, 1rem) clamp(0.9rem, 1.8vw, 1.3rem);
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.8vw, 1.5rem);
+    text-decoration: none;
+    color: var(--c-black);
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+  .card__arrow { border-left: var(--border); padding-left: 0.8rem; }
+  .card__cta:hover { background: var(--c-gold); }
+  .card__count {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    justify-self: end;
+  }
+  .card__preview {
+    position: relative;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(120% 120% at 50% 30%, #4a4036, #15110d 70%);
+    overflow: hidden;
+  }
+  .card__preview-mark {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    color: var(--c-white);
+    transform: rotate(-6deg);
+    opacity: 0.92;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0);
+    white-space: nowrap; border: 0;
+  }
+
+  /* ── entrance reveal (JS adds .reveal-ready, then .is-in on scroll) ── */
+  .work.reveal-ready .work__word,
+  .work.reveal-ready .work__card {
+    opacity: 0;
+  }
+  .work.reveal-ready .work__word {
+    transform: translateY(-50%) translateX(54px);
+    transition: opacity 0.8s ease 0.18s,
+      transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.18s;
+  }
+  .work.reveal-ready .work__card {
+    transform: translateY(48px) scale(0.97);
+    transition: opacity 0.9s ease 0.28s,
+      transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.28s;
+  }
+  .work.reveal-ready.is-in .work__word { opacity: 1; transform: translateY(-50%) translateX(0); }
+  .work.reveal-ready.is-in .work__card { opacity: 1; transform: translateY(0) scale(1); }
+
+  /* ── mobile ────────────────────────────────────────────── */
+  @media (max-width: 860px) {
+    .work__card { width: min(92vw, 520px); }
+    .work__word { font-size: 38vw; }
+  }
+</style>
+
+<script>
+  const work = document.querySelector<HTMLElement>("[data-work]");
+  if (work) {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduce) {
+      // prime the entrance reveal (sets initial hidden states via CSS)
+      work.classList.add("reveal-ready");
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting) {
+            work.classList.add("is-in");
+            io.disconnect();
+          }
+        },
+        { threshold: 0.08 },
+      );
+      io.observe(work);
+    }
+  }
+</script>
