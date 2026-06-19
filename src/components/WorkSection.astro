@@ -18,6 +18,11 @@ const project = {
   <!-- giant WORK wordmark, partly hidden behind the card -->
   <span class="work__word" aria-hidden="true">WORK</span>
 
+  <!-- layered rolling-hills backdrop (BEHIND the card) -->
+  <div class="work__back" aria-hidden="true">
+    <img src="/work-assets/hills-back.svg" alt="" decoding="async" />
+  </div>
+
   <!-- the project card -->
   <article class="work__card" data-card>
     <header class="card__head">
@@ -46,6 +51,17 @@ const project = {
     </div>
   </article>
 
+  <!-- foreground hillside (road/hill/wall) — sits IN FRONT of the card -->
+  <div class="work__front" aria-hidden="true">
+    <img src="/work-assets/hillside-trim.png" alt="" decoding="async" />
+  </div>
+
+  <!-- the cyclist (two layers: static body + head/bottle assembly that tilts for the drink) -->
+  <div class="work__biker" aria-hidden="true">
+    <img class="biker__body" src="/work-assets/biker-body.png" alt="" decoding="async" />
+    <img class="biker__head" src="/work-assets/biker-head.png" alt="" decoding="async" />
+  </div>
+
   <span class="sr-only">Selected work — featuring {project.client}.</span>
 </section>
 
@@ -62,10 +78,77 @@ const project = {
     border-top: var(--border);
   }
 
+  /* ── rolling-hills backdrop (behind the card) ──────────── */
+  .work__back {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    /* scaled well past the viewport so the low hill band rises into view
+       behind the card (the art is mostly transparent sky up top) */
+    width: 120%;
+    min-width: 1600px;
+    transform: translateX(-50%);
+    z-index: 1;
+    pointer-events: none;
+  }
+  .work__back img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* ── foreground hillside (in FRONT of the card) ────────── */
+  .work__front {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: min(66vw, 1000px);
+    z-index: 4; /* above the card (z3) = card sits inside the hill */
+    pointer-events: none;
+  }
+  .work__front img { width: 100%; height: auto; display: block; }
+
+  /* ── the cyclist (on the road) ─────────────────────────── */
+  .work__biker {
+    position: absolute;
+    right: 15%;
+    bottom: 8%;
+    height: clamp(168px, 32vh, 365px);
+    z-index: 5; /* on top of the hillside road */
+    pointer-events: none;
+  }
+  /* body stays in-flow so it sizes the box; soft contact shadow grounds him on the road */
+  .biker__body {
+    height: 100%;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 14px 10px rgba(0, 0, 0, 0.35));
+  }
+  /* head + bottle assembly overlays exactly on top and tilts back for a subtle drinking gulp */
+  .biker__head {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: auto;
+    display: block;
+    transform-origin: 53.4% 24.8%; /* pivot at the shoulder/neck (705,420 in the art) */
+    /* gulp animation disabled — rigid CSS rotation looked unnatural; doing it properly in Rive */
+  }
+  @keyframes bikerGulp {
+    0%, 52% { transform: rotate(0deg); }      /* rest */
+    66% { transform: rotate(5deg); }           /* tip head back, bottle up */
+    80% { transform: rotate(5deg); }           /* hold the sip */
+    93%, 100% { transform: rotate(0deg); }     /* return to rest */
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .biker__head { animation: none; }
+  }
+
   /* ── giant WORK wordmark ───────────────────────────────── */
   .work__word {
     position: absolute;
-    top: 12%;
+    top: 16%;
     right: clamp(2rem, 8vw, 11rem);
     transform: translateY(-50%);
     z-index: 2;
@@ -185,9 +268,15 @@ const project = {
   }
 
   /* ── entrance reveal (JS adds .reveal-ready, then .is-in on scroll) ── */
+  .work.reveal-ready .work__back,
   .work.reveal-ready .work__word,
   .work.reveal-ready .work__card {
     opacity: 0;
+  }
+  .work.reveal-ready .work__back {
+    transform: translateX(-50%) translateY(24px);
+    transition: opacity 0.9s ease 0.05s,
+      transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
   }
   .work.reveal-ready .work__word {
     transform: translateY(-50%) translateX(54px);
@@ -199,6 +288,7 @@ const project = {
     transition: opacity 0.9s ease 0.28s,
       transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.28s;
   }
+  .work.reveal-ready.is-in .work__back { opacity: 1; transform: translateX(-50%) translateY(0); }
   .work.reveal-ready.is-in .work__word { opacity: 1; transform: translateY(-50%) translateX(0); }
   .work.reveal-ready.is-in .work__card { opacity: 1; transform: translateY(0) scale(1); }
 
