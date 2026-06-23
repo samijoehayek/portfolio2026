@@ -3,21 +3,19 @@
 // Consumed by ServicesSection.astro (markup) and servicesLine.ts (motion).
 
 export interface Service {
-  index: number; // 1..N — displayed zero-padded (01..07)
-  code: string; // 3-letter tag code on the hanging clip (BTC, SOL …)
-  monogram: string; // 2-char giant glyph on the black top panel
+  index: number; // 1..N — display order
+  code: string; // 3-letter tag code on the hanging clip + giant monogram (BTC, SOL …)
   name: string; // .service-card__name (Anton display)
   date: string; // decorative stamp on the tag (DH uses date stamps)
-  markers: string[]; // sub-disciplines grid (triangle bullets)
+  markers: string[]; // sub-disciplines timeline (triangles above/below the line)
   journey: [string, string]; // bottom outline word-cycle pair (DH: DES → ART)
-  accent: string; // hex — tag bg + monogram + journey outline tint
+  accent: string; // hex — tag + monogram + glassy body + journey tint
 }
 
 export const services: Service[] = [
   {
     index: 1,
     code: "BTC",
-    monogram: "BT",
     name: "BITCOIN ENGINEERING",
     date: "12-24-NOW",
     markers: [
@@ -34,7 +32,6 @@ export const services: Service[] = [
   {
     index: 2,
     code: "SOL",
-    monogram: "SC",
     name: "SMART CONTRACTS",
     date: "01-22-NOW",
     markers: [
@@ -51,7 +48,6 @@ export const services: Service[] = [
   {
     index: 3,
     code: "DFI",
-    monogram: "DF",
     name: "DEFI PROTOCOLS",
     date: "09-24-NOW",
     markers: [
@@ -67,7 +63,6 @@ export const services: Service[] = [
   {
     index: 4,
     code: "RWA",
-    monogram: "RW",
     name: "RWA TOKENIZATION",
     date: "26-26-NEW",
     markers: [
@@ -83,7 +78,6 @@ export const services: Service[] = [
   {
     index: 5,
     code: "WEB",
-    monogram: "FS",
     name: "FULL-STACK WEB",
     date: "22-22-NOW",
     markers: [
@@ -99,7 +93,6 @@ export const services: Service[] = [
   {
     index: 6,
     code: "NFT",
-    monogram: "NF",
     name: "NFT & LAUNCHPADS",
     date: "22-23-OUT",
     markers: [
@@ -115,7 +108,6 @@ export const services: Service[] = [
   {
     index: 7,
     code: "OPS",
-    monogram: "OP",
     name: "DEVOPS & INFRA",
     date: "21-21-RUN",
     markers: [
