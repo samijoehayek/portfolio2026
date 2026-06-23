@@ -1,0 +1,436 @@
+---
+// Services section — the "laundry line": cards hang from a fixed metal cable by a
+// colored clip and swing like washing as you scroll / grab-and-fling the row.
+// Content derived from the résumé + Work projects (RWA included). Motion lives in
+// src/scripts/servicesLine.ts (GSAP Draggable + InertiaPlugin + ScrollTrigger).
+import { services } from "../data/services";
+
+const titleChars = "SERVICES".split("");
+---
+
+<section class="services" id="services" data-services aria-label="Services">
+  <header class="services__header">
+    <h2 class="services__title" aria-label="Services">
+      {
+        titleChars.map((ch, i) => (
+          <span class="services__title-char" style={`--i:${i}`} aria-hidden="true">
+            {ch}
+          </span>
+        ))
+      }
+    </h2>
+    <p class="services__intro">
+      Full-stack across blockchain, back-end and front-end — I take a project from
+      ground zero to a production launch.
+      <a class="services__cta" href="#about">get in touch &rarr;</a>
+    </p>
+  </header>
+
+  <div class="services__scroller" data-scroller>
+    <!-- THE CABLE: one CSS-gradient bar, fixed, spanning the whole track (width set by JS) -->
+    <div class="services__cable" data-cable aria-hidden="true"></div>
+
+    <!-- THE TRACK: flex row moved only via transform:translateX -->
+    <ul class="services__track" data-track role="list">
+      {
+        services.map((s) => (
+          <li class="service-card" data-card style={`--accent:${s.accent}`}>
+            <div class="service-card__inner" data-inner tabindex="0" aria-label={s.name}>
+              <!-- the clip that hangs over the cable -->
+              <div class="service-card__clip">
+                <span class="service-card__ring" aria-hidden="true" />
+                <span class="service-card__code">{s.code}</span>
+                <span class="service-card__date">{s.date}</span>
+              </div>
+              <span class="service-card__neck" aria-hidden="true" />
+
+              <!-- black top panel with giant monogram -->
+              <div class="service-card__top">
+                <span class="service-card__monogram" aria-hidden="true">{s.monogram}</span>
+                <span class="service-card__no">
+                  {String(s.index).padStart(2, "0")} / {String(services.length).padStart(2, "0")}
+                </span>
+              </div>
+
+              <!-- name + sub-disciplines -->
+              <div class="service-card__body">
+                <span class="service-card__label">Service</span>
+                <h3 class="service-card__name">{s.name}</h3>
+                <ul class="service-card__markers" role="list">
+                  {s.markers.map((m) => (
+                    <li class="service-card__marker">{m}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <!-- outline word-cycle -->
+              <div class="service-card__journey" aria-hidden="true">
+                <span class="word">{s.journey[0]}</span>
+                <span class="arrow">&rarr;</span>
+                <span class="word">{s.journey[1]}</span>
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <span class="sr-only">What I do.</span>
+</section>
+
+<style>
+  .services {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background: var(--c-blue);
+    color: var(--c-black);
+    border-top: var(--border); /* same divider as the navbar / Work */
+    padding: clamp(2.4rem, 6vh, 5rem) 0 clamp(3rem, 8vh, 6rem);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── header ─────────────────────────────────────────────── */
+  .services__header {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 27rem);
+    align-items: end;
+    gap: 1.5rem 2rem;
+    padding: 0 var(--gutter);
+  }
+  .services__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(4rem, 16vw, 15rem);
+    line-height: 0.78;
+    letter-spacing: 0.01em;
+    color: var(--c-black);
+  }
+  .services__title-char {
+    display: inline-block;
+    will-change: transform, opacity;
+  }
+  .services__intro {
+    margin: 0 0 0.6rem;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: clamp(0.95rem, 1.15vw, 1.15rem);
+    line-height: 1.45;
+    color: color-mix(in srgb, var(--c-black) 86%, transparent);
+  }
+  .services__cta {
+    display: inline-block;
+    margin-top: 0.6rem;
+    font-family: var(--font-nav);
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    color: var(--c-black);
+    text-decoration: none;
+    border-bottom: var(--bw) solid var(--c-black);
+    padding-bottom: 2px;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .services__cta:hover {
+    color: var(--c-gold);
+    border-color: var(--c-gold);
+  }
+
+  /* ── scroller + cable ───────────────────────────────────── */
+  .services__scroller {
+    position: relative;
+    margin-top: clamp(2rem, 5vh, 4rem);
+    flex: 1;
+    padding-top: 18px; /* breathing room above the cable */
+    overflow: visible;
+    cursor: grab;
+  }
+  .services__scroller:active {
+    cursor: grabbing;
+  }
+  /* the metal rod: dark at bottom, mid-grey body, bright highlight on top edge */
+  .services__cable {
+    position: absolute;
+    top: 18px;
+    left: 0;
+    height: 15px;
+    width: 100%; /* JS overrides with the full track width */
+    background: linear-gradient(0deg, #000, #333 22%, #555 55%, #aaa 88%, #ddd);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* ── track ──────────────────────────────────────────────── */
+  .services__track {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: clamp(1.4rem, 2.5vw, 2.6rem);
+    width: max-content;
+    will-change: transform;
+    position: relative;
+    z-index: 2;
+    touch-action: pan-y; /* let Lenis keep vertical scroll; we own horizontal */
+  }
+
+  .service-card {
+    flex: 0 0 auto;
+    width: clamp(300px, 46vw, 720px);
+    list-style: none;
+  }
+
+  /* THE SWINGING BODY — pivots from the cable (top center) */
+  .service-card__inner {
+    position: relative;
+    transform-origin: 50% 12px; /* the clip ring sits on the cable here */
+    will-change: transform;
+    display: flex;
+    flex-direction: column;
+    outline: none;
+  }
+  .service-card__inner:focus-visible {
+    outline: var(--bw) solid var(--c-gold);
+    outline-offset: 6px;
+  }
+
+  /* ── the clip / tag on the cable ────────────────────────── */
+  .service-card__clip {
+    position: relative;
+    align-self: center;
+    width: clamp(96px, 13vw, 150px);
+    margin-top: 4px;
+    padding: 6px 0 8px;
+    background: var(--accent);
+    border: var(--bw) solid var(--c-black);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 3;
+    box-shadow: 0 8px 0 -3px rgba(0, 0, 0, 0.18);
+  }
+  /* the ring that wraps the cable, poking out the top of the clip */
+  .service-card__ring {
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 22px;
+    height: 22px;
+    border: var(--bw) solid var(--c-black);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 60%, #fff);
+  }
+  .service-card__code {
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+    line-height: 1;
+    color: var(--c-black);
+    margin-top: 8px;
+  }
+  .service-card__date {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    color: color-mix(in srgb, var(--c-black) 70%, transparent);
+    margin-top: 2px;
+  }
+  /* short neck joining clip to the card body */
+  .service-card__neck {
+    align-self: center;
+    width: var(--bw);
+    height: 14px;
+    background: var(--c-black);
+  }
+
+  /* ── black top panel + monogram ─────────────────────────── */
+  .service-card__top {
+    position: relative;
+    background: var(--c-black);
+    color: var(--c-white);
+    border: var(--bw) solid var(--c-black);
+    border-radius: 14px 14px 0 0;
+    height: clamp(150px, 22vh, 240px);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .service-card__monogram {
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 13vw, 11rem);
+    line-height: 0.8;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+  }
+  .service-card__no {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: color-mix(in srgb, var(--c-white) 70%, transparent);
+  }
+
+  /* ── body: label + name + markers ───────────────────────── */
+  .service-card__body {
+    background: var(--c-white);
+    border: var(--bw) solid var(--c-black);
+    border-top: none;
+    padding: clamp(1.1rem, 2.2vw, 1.9rem) clamp(1.2rem, 2.4vw, 2rem) clamp(1.2rem, 2.4vw, 1.8rem);
+  }
+  .service-card__label {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--c-black) 55%, transparent);
+  }
+  .service-card__name {
+    margin: 0.35rem 0 1.1rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3.3vw, 2.7rem);
+    line-height: 0.94;
+    letter-spacing: 0.01em;
+    color: var(--c-black);
+  }
+  .service-card__markers {
+    list-style: none;
+    margin: 0;
+    padding: 1rem 0 0;
+    border-top: var(--bw) dashed color-mix(in srgb, var(--c-black) 35%, transparent);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem 1.1rem;
+  }
+  .service-card__marker {
+    position: relative;
+    padding-left: 1rem;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: clamp(0.82rem, 1vw, 0.98rem);
+    color: var(--c-black);
+  }
+  .service-card__marker::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.42em;
+    border-left: 6px solid var(--accent);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+
+  /* ── outline word-cycle ─────────────────────────────────── */
+  .service-card__journey {
+    background: var(--c-white);
+    border: var(--bw) solid var(--c-black);
+    border-top: none;
+    border-radius: 0 0 14px 14px;
+    padding: 0.7rem clamp(1.2rem, 2.4vw, 2rem) 1rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3.4vw, 2.8rem);
+    line-height: 1;
+  }
+  .service-card__journey .word {
+    color: transparent;
+    -webkit-text-stroke: 2px var(--c-black);
+    transition: color 0.4s ease;
+  }
+  .service-card__journey .word.is-lit {
+    color: var(--accent);
+    -webkit-text-stroke: 2px var(--accent);
+  }
+  .service-card__journey .arrow {
+    color: var(--accent);
+    font-family: var(--font-sans);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ── entrance reveal (JS adds .reveal-ready, then .is-in) ── */
+  .services.reveal-ready .services__title-char {
+    opacity: 0;
+    transform: translateY(60%) rotate(6deg);
+    transition:
+      opacity 0.6s ease calc(var(--i) * 0.045s),
+      transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i) * 0.045s);
+  }
+  .services.reveal-ready .services__scroller {
+    opacity: 0;
+    transform: translateY(40px);
+    transition:
+      opacity 0.9s ease 0.3s,
+      transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+  }
+  .services.reveal-ready.is-in .services__title-char {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+  .services.reveal-ready.is-in .services__scroller {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── mobile ─────────────────────────────────────────────── */
+  @media (max-width: 860px) {
+    .services__header {
+      grid-template-columns: 1fr;
+    }
+    .service-card {
+      width: clamp(260px, 80vw, 360px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .services__scroller {
+      overflow-x: auto;
+      cursor: default;
+    }
+  }
+</style>
+
+<script>
+  import { initServicesLine } from "../scripts/servicesLine";
+
+  const section = document.querySelector<HTMLElement>("[data-services]");
+  if (section) {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduce) {
+      section.classList.add("reveal-ready");
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting) {
+            section.classList.add("is-in");
+            io.disconnect();
+          }
+        },
+        { threshold: 0.12 },
+      );
+      io.observe(section);
+    }
+  }
+
+  initServicesLine();
+</script>
