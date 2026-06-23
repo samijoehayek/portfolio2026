@@ -1,8 +1,9 @@
 ---
-// Services section — the "laundry line": cards hang from a fixed metal cable by a
-// colored clip and swing like washing as you scroll / grab-and-fling the row.
-// Content derived from the résumé + Work projects (RWA included). Motion lives in
-// src/scripts/servicesLine.ts (GSAP Draggable + InertiaPlugin + ScrollTrigger).
+// Services section — the "laundry line": cards hang from a cord that threads through
+// each card's eyelet. The cord runs BEHIND a card from its left edge to the eyelet,
+// then IN FRONT from the eyelet to the right edge (and shows in the gaps) — so it
+// reads as a real string threaded through holes. Cards swing like washing as you
+// grab-and-fling the row. Motion lives in src/scripts/servicesLine.ts.
 import { services } from "../data/services";
 
 const titleChars = "SERVICES".split("");
@@ -19,57 +20,69 @@ const titleChars = "SERVICES".split("");
         ))
       }
     </h2>
-    <p class="services__intro">
-      Full-stack across blockchain, back-end and front-end — I take a project from
-      ground zero to a production launch.
+    <div class="services__intro">
+      <p class="services__intro-text">
+        Full-stack across blockchain, back-end and front-end — I take a project
+        from ground zero to a production launch.
+      </p>
       <a class="services__cta" href="#about">get in touch &rarr;</a>
-    </p>
+    </div>
   </header>
 
   <div class="services__scroller" data-scroller>
-    <!-- THE CABLE: one CSS-gradient bar, fixed, spanning the whole track (width set by JS) -->
-    <div class="services__cable" data-cable aria-hidden="true"></div>
-
     <!-- THE TRACK: flex row moved only via transform:translateX -->
     <ul class="services__track" data-track role="list">
+      <!-- BACK CORD: one bar behind every card (shows in gaps + behind each card's left half) -->
+      <div class="services__cord services__cord--back" data-cable aria-hidden="true"></div>
+
       {
         services.map((s) => (
           <li class="service-card" data-card style={`--accent:${s.accent}`}>
             <div class="service-card__inner" data-inner tabindex="0" aria-label={s.name}>
-              <!-- the clip that hangs over the cable -->
-              <div class="service-card__clip">
-                <span class="service-card__ring" aria-hidden="true" />
-                <span class="service-card__code">{s.code}</span>
-                <span class="service-card__date">{s.date}</span>
-              </div>
-              <span class="service-card__neck" aria-hidden="true" />
+              <!-- ONE rounded card: tall black panel (with the clip INSIDE) + glassy body -->
+              <div class="service-card__card">
+                <div class="service-card__top">
+                  <!-- the clip lives INSIDE the black panel; the cord threads its eyelet -->
+                  <div class="service-card__clip">
+                    <span class="service-card__code">{s.code}</span>
+                    <span class="service-card__eyelet" aria-hidden="true" />
+                    <span class="service-card__date">{s.date}</span>
+                  </div>
+                  <span class="service-card__monogram" aria-hidden="true">{s.code}</span>
+                </div>
 
-              <!-- black top panel with giant monogram -->
-              <div class="service-card__top">
-                <span class="service-card__monogram" aria-hidden="true">{s.monogram}</span>
-                <span class="service-card__no">
-                  {String(s.index).padStart(2, "0")} / {String(services.length).padStart(2, "0")}
-                </span>
-              </div>
+                <div class="service-card__body">
+                  <span class="service-card__label">Service</span>
+                  <h3 class="service-card__name">{s.name}</h3>
 
-              <!-- name + sub-disciplines -->
-              <div class="service-card__body">
-                <span class="service-card__label">Service</span>
-                <h3 class="service-card__name">{s.name}</h3>
-                <ul class="service-card__markers" role="list">
-                  {s.markers.map((m) => (
-                    <li class="service-card__marker">{m}</li>
-                  ))}
-                </ul>
-              </div>
+                  <!-- markers timeline: thick line, triangles above & below -->
+                  <div class="service-card__markers">
+                    <div class="service-card__markers-row">
+                      {s.markers.map((m, i) => (
+                        <div
+                          class={`service-card__marker service-card__marker--${i % 2 === 0 ? "up" : "down"}`}
+                        >
+                          <span class="service-card__marker-tri" aria-hidden="true" />
+                          <span class="service-card__marker-label">{m}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-              <!-- outline word-cycle -->
-              <div class="service-card__journey" aria-hidden="true">
-                <span class="word">{s.journey[0]}</span>
-                <span class="arrow">&rarr;</span>
-                <span class="word">{s.journey[1]}</span>
+                  <span class="service-card__divider" aria-hidden="true" />
+
+                  <!-- outline word-cycle -->
+                  <div class="service-card__journey" aria-hidden="true">
+                    <span class="word">{s.journey[0]}</span>
+                    <span class="arrow">&rarr;</span>
+                    <span class="word">{s.journey[1]}</span>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <!-- FRONT CORD: eyelet → right edge, OUTSIDE the swinging inner so it stays straight -->
+            <div class="services__cord services__cord--front" aria-hidden="true"></div>
           </li>
         ))
       }
@@ -81,13 +94,16 @@ const titleChars = "SERVICES".split("");
 
 <style>
   .services {
+    --eye: 90px; /* cord/eyelet centre, measured down from each card's top edge */
+    --cord-h: 14px;
+    --gap: clamp(2rem, 3.4vw, 3.8rem); /* gap between cards (also used by the front cord) */
     position: relative;
-    min-height: 100vh;
+    min-height: 138vh;
     overflow: hidden;
     background: var(--c-blue);
     color: var(--c-black);
     border-top: var(--border); /* same divider as the navbar / Work */
-    padding: clamp(2.4rem, 6vh, 5rem) 0 clamp(3rem, 8vh, 6rem);
+    padding: clamp(4rem, 9vh, 7rem) 0 clamp(3.5rem, 9vh, 7rem);
     display: flex;
     flex-direction: column;
   }
@@ -114,15 +130,18 @@ const titleChars = "SERVICES".split("");
   }
   .services__intro {
     margin: 0 0 0.6rem;
+  }
+  .services__intro-text {
+    margin: 0;
     font-family: var(--font-sans);
     font-weight: 500;
     font-size: clamp(0.95rem, 1.15vw, 1.15rem);
-    line-height: 1.45;
+    line-height: 1.55;
     color: color-mix(in srgb, var(--c-black) 86%, transparent);
   }
   .services__cta {
     display: inline-block;
-    margin-top: 0.6rem;
+    margin-top: 0.9rem;
     font-family: var(--font-nav);
     font-size: 1.05rem;
     letter-spacing: 0.02em;
@@ -137,40 +156,28 @@ const titleChars = "SERVICES".split("");
     border-color: var(--c-gold);
   }
 
-  /* ── scroller + cable ───────────────────────────────────── */
+  /* ── scroller ───────────────────────────────────────────── */
   .services__scroller {
     position: relative;
     margin-top: clamp(2rem, 5vh, 4rem);
     flex: 1;
-    padding-top: 18px; /* breathing room above the cable */
+    padding-top: 44px; /* a little blue above the cards */
     overflow: visible;
     cursor: grab;
   }
   .services__scroller:active {
     cursor: grabbing;
   }
-  /* the metal rod: dark at bottom, mid-grey body, bright highlight on top edge */
-  .services__cable {
-    position: absolute;
-    top: 18px;
-    left: 0;
-    height: 15px;
-    width: 100%; /* JS overrides with the full track width */
-    background: linear-gradient(0deg, #000, #333 22%, #555 55%, #aaa 88%, #ddd);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
-    z-index: 1;
-    pointer-events: none;
-  }
 
   /* ── track ──────────────────────────────────────────────── */
   .services__track {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 0 clamp(1.5rem, 5vw, 5rem); /* first/last card not flush to the edge */
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    gap: clamp(1.4rem, 2.5vw, 2.6rem);
+    gap: var(--gap);
     width: max-content;
     will-change: transform;
     position: relative;
@@ -178,19 +185,47 @@ const titleChars = "SERVICES".split("");
     touch-action: pan-y; /* let Lenis keep vertical scroll; we own horizontal */
   }
 
+  /* the metal rod: dark at bottom, mid-grey body, bright highlight on the top edge */
+  .services__cord {
+    height: var(--cord-h);
+    background: linear-gradient(0deg, #000, #333 22%, #555 55%, #aaa 88%, #ddd);
+    pointer-events: none;
+  }
+  /* faint backing bar — only ever seen in the leading gap before the first card
+     (everywhere else it's hidden behind a card or under a front bar). No shadow,
+     so it can't seam against the front bars. */
+  .services__cord--back {
+    position: absolute;
+    top: calc(var(--eye) - var(--cord-h) / 2);
+    left: 0;
+    right: 0;
+    z-index: 0;
+  }
+  /* THE visible cord: ONE continuous piece per card — from the eyelet's left edge,
+     through the hole, across the card's right half and the gap, tucking behind the
+     next card. Outside the swinging inner, so it stays perfectly straight. */
+  .services__cord--front {
+    position: absolute;
+    top: calc(var(--eye) - var(--cord-h) / 2);
+    left: 50%; /* from the eyelet centre to the card's right edge (gaps = the back cord) */
+    right: 0;
+    z-index: 2; /* on top of the card; the in-hole cord band lives in the eyelet itself */
+  }
+
   .service-card {
+    --body-px: clamp(1.3rem, 2.4vw, 2rem); /* body side padding (reused by the full-bleed divider) */
+    position: relative;
+    z-index: 1; /* above the back cord */
     flex: 0 0 auto;
-    width: clamp(300px, 46vw, 720px);
+    width: clamp(384px, 40vw, 600px);
     list-style: none;
   }
 
-  /* THE SWINGING BODY — pivots from the cable (top center) */
+  /* THE SWINGING BODY — pivots from the cord/eyelet line */
   .service-card__inner {
     position: relative;
-    transform-origin: 50% 12px; /* the clip ring sits on the cable here */
+    transform-origin: 50% var(--eye); /* the eyelet — the pendulum pivot */
     will-change: transform;
-    display: flex;
-    flex-direction: column;
     outline: none;
   }
   .service-card__inner:focus-visible {
@@ -198,93 +233,99 @@ const titleChars = "SERVICES".split("");
     outline-offset: 6px;
   }
 
-  /* ── the clip / tag on the cable ────────────────────────── */
-  .service-card__clip {
-    position: relative;
-    align-self: center;
-    width: clamp(96px, 13vw, 150px);
-    margin-top: 4px;
-    padding: 6px 0 8px;
-    background: var(--accent);
-    border: var(--bw) solid var(--c-black);
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    z-index: 3;
-    box-shadow: 0 8px 0 -3px rgba(0, 0, 0, 0.18);
-  }
-  /* the ring that wraps the cable, poking out the top of the clip */
-  .service-card__ring {
-    position: absolute;
-    top: -9px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 22px;
-    height: 22px;
-    border: var(--bw) solid var(--c-black);
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--accent) 60%, #fff);
-  }
-  .service-card__code {
-    font-family: var(--font-display);
-    font-size: clamp(1.3rem, 2.4vw, 1.9rem);
-    line-height: 1;
-    color: var(--c-black);
-    margin-top: 8px;
-  }
-  .service-card__date {
-    font-family: var(--font-sans);
-    font-weight: 700;
-    font-size: 0.58rem;
-    letter-spacing: 0.06em;
-    color: color-mix(in srgb, var(--c-black) 70%, transparent);
-    margin-top: 2px;
-  }
-  /* short neck joining clip to the card body */
-  .service-card__neck {
-    align-self: center;
-    width: var(--bw);
-    height: 14px;
+  /* ── ONE rounded card ───────────────────────────────────── */
+  .service-card__card {
+    width: 100%;
+    border: var(--bw) solid #0a0a0a;
+    border-radius: 40px; /* a little more rounded */
+    overflow: hidden;
     background: var(--c-black);
   }
-
-  /* ── black top panel + monogram ─────────────────────────── */
   .service-card__top {
     position: relative;
     background: var(--c-black);
-    color: var(--c-white);
-    border: var(--bw) solid var(--c-black);
-    border-radius: 14px 14px 0 0;
-    height: clamp(150px, 22vh, 240px);
-    display: grid;
-    place-items: center;
-    overflow: hidden;
+    height: clamp(250px, 30vh, 366px); /* shorter than the body, trimmed from the bottom */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* monogram sits to the LEFT */
+    padding: 154px 0 0 clamp(1.8rem, 3.2vw, 3rem); /* clear the square clip; left inset */
   }
   .service-card__monogram {
     font-family: var(--font-display);
-    font-size: clamp(5rem, 13vw, 11rem);
+    font-size: clamp(4.4rem, 9.4vw, 8.4rem); /* a touch shorter */
     line-height: 0.8;
     letter-spacing: 0.02em;
     color: var(--accent);
   }
-  .service-card__no {
+
+  /* ── the clip / tag (INSIDE the black panel), eyelet threaded by the cord ─ */
+  .service-card__clip {
     position: absolute;
-    top: 12px;
-    right: 16px;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1; /* over the card's black, under the front cord */
+    width: clamp(114px, 13vw, 140px);
+    aspect-ratio: 1; /* square */
+    background: var(--accent);
+    border: var(--bw) solid #0a0a0a;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* centre code · eyelet · date in the square */
+    gap: 6px;
+    box-shadow: 0 8px 0 -4px rgba(0, 0, 0, 0.22);
+  }
+  .service-card__code {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+    line-height: 1;
+    color: #0a0a0a;
+  }
+  /* the eyelet: just a blue-filled ring that sits BEHIND the cord. The single front
+     bar crosses its middle, so the blue shows above/below = a real open hole, and the
+     cord stays one continuous piece (no stub to seam against). */
+  /* the grommet: blue hole with a dark ring + the cord band drawn INSIDE it (the cord seen
+     through the hole). The front cord segment continues it from the centre to the right. */
+  .service-card__eyelet {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: var(--bw) solid #0a0a0a;
+    background: var(--c-blue);
+    overflow: hidden;
+  }
+  .service-card__eyelet::before {
+    content: "";
+    position: absolute;
+    left: -5px;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: var(--cord-h);
+    background: linear-gradient(0deg, #000, #333 22%, #555 55%, #aaa 88%, #ddd);
+  }
+  .service-card__date {
     font-family: var(--font-sans);
     font-weight: 700;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    color: color-mix(in srgb, var(--c-white) 70%, transparent);
+    font-size: 0.55rem;
+    letter-spacing: 0.06em;
+    color: color-mix(in srgb, #0a0a0a 72%, transparent);
   }
 
-  /* ── body: label + name + markers ───────────────────────── */
+  /* ── glassy translucent body ────────────────────────────── */
   .service-card__body {
-    background: var(--c-white);
-    border: var(--bw) solid var(--c-black);
-    border-top: none;
-    padding: clamp(1.1rem, 2.2vw, 1.9rem) clamp(1.2rem, 2.4vw, 2rem) clamp(1.2rem, 2.4vw, 1.8rem);
+    display: flex;
+    flex-direction: column;
+    border-top: var(--bw) solid #0a0a0a;
+    padding: clamp(2rem, 3.6vw, 3rem) var(--body-px) clamp(1.9rem, 3.2vw, 2.6rem);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 88%, transparent),
+      color-mix(in srgb, var(--accent) 56%, transparent)
+    );
   }
   .service-card__label {
     font-family: var(--font-sans);
@@ -292,68 +333,115 @@ const titleChars = "SERVICES".split("");
     font-size: 0.7rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--c-black) 55%, transparent);
+    color: color-mix(in srgb, #0a0a0a 60%, transparent);
   }
   .service-card__name {
-    margin: 0.35rem 0 1.1rem;
+    margin: 0.35rem 0 0; /* tight under the SERVICE label */
     font-family: var(--font-display);
-    font-size: clamp(1.5rem, 3.3vw, 2.7rem);
+    font-size: clamp(1.7rem, 3.4vw, 2.8rem);
     line-height: 0.94;
     letter-spacing: 0.01em;
-    color: var(--c-black);
+    color: #0a0a0a;
   }
+
+  /* ── markers timeline (thick line + triangles sitting on it) ─ */
   .service-card__markers {
-    list-style: none;
-    margin: 0;
-    padding: 1rem 0 0;
-    border-top: var(--bw) dashed color-mix(in srgb, var(--c-black) 35%, transparent);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.55rem 1.1rem;
-  }
-  .service-card__marker {
+    --half: 70px;
     position: relative;
-    padding-left: 1rem;
-    font-family: var(--font-sans);
-    font-weight: 500;
-    font-size: clamp(0.82rem, 1vw, 0.98rem);
-    color: var(--c-black);
+    height: 140px;
+    margin: clamp(2rem, 3.6vw, 3.1rem) 0 0; /* breathing room → taller colored body */
   }
-  .service-card__marker::before {
+  .service-card__markers::before {
     content: "";
     position: absolute;
     left: 0;
-    top: 0.42em;
-    border-left: 6px solid var(--accent);
-    border-top: 4px solid transparent;
-    border-bottom: 4px solid transparent;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 4px; /* thicker than the card outline */
+    background: #0a0a0a;
+  }
+  .service-card__markers-row {
+    position: relative;
+    height: 100%;
+    display: flex;
+  }
+  .service-card__marker {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .service-card__marker--up {
+    flex-direction: column-reverse;
+    justify-content: flex-start; /* column-reverse inverts this → packs DOWN to the line */
+    padding-bottom: var(--half);
+  }
+  .service-card__marker--down {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: var(--half);
+  }
+  .service-card__marker-tri {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+  }
+  .service-card__marker--up .service-card__marker-tri {
+    border-bottom: 9px solid #0a0a0a; /* ▲ points up, base sitting ON the line */
+  }
+  .service-card__marker--down .service-card__marker-tri {
+    border-top: 9px solid #0a0a0a; /* ▼ points down, base sitting ON the line */
+  }
+  .service-card__marker-label {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.74rem;
+    letter-spacing: 0.01em;
+    color: #0a0a0a;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .service-card__divider {
+    display: block;
+    height: 3px;
+    /* full-bleed: negate the body padding so it touches the card edge to edge */
+    margin: clamp(1.2rem, 2.4vw, 1.9rem) calc(-1 * var(--body-px)) clamp(1.2rem, 2.4vw, 1.9rem);
+    /* finer, more frequent dashes (6px dash / 6px gap) */
+    background-image: repeating-linear-gradient(
+      to right,
+      color-mix(in srgb, #0a0a0a 55%, transparent) 0 6px,
+      transparent 6px 12px
+    );
+    background-repeat: repeat-x;
+    background-size: 100% 3px;
+    background-position: 0 50%;
   }
 
   /* ── outline word-cycle ─────────────────────────────────── */
   .service-card__journey {
-    background: var(--c-white);
-    border: var(--bw) solid var(--c-black);
-    border-top: none;
-    border-radius: 0 0 14px 14px;
-    padding: 0.7rem clamp(1.2rem, 2.4vw, 2rem) 1rem;
     display: flex;
     align-items: baseline;
-    gap: 0.6rem;
+    gap: 0.5rem;
     font-family: var(--font-display);
-    font-size: clamp(1.6rem, 3.4vw, 2.8rem);
+    font-size: clamp(2.2rem, 4.8vw, 3.5rem);
     line-height: 1;
   }
   .service-card__journey .word {
     color: transparent;
-    -webkit-text-stroke: 2px var(--c-black);
+    -webkit-text-stroke: 2px #0a0a0a;
     transition: color 0.4s ease;
   }
   .service-card__journey .word.is-lit {
-    color: var(--accent);
-    -webkit-text-stroke: 2px var(--accent);
+    color: #0a0a0a;
+    -webkit-text-stroke: 2px #0a0a0a;
   }
   .service-card__journey .arrow {
-    color: var(--accent);
+    color: #0a0a0a;
     font-family: var(--font-sans);
   }
 
@@ -399,7 +487,7 @@ const titleChars = "SERVICES".split("");
       grid-template-columns: 1fr;
     }
     .service-card {
-      width: clamp(260px, 80vw, 360px);
+      width: clamp(280px, 82vw, 380px);
     }
   }
 
