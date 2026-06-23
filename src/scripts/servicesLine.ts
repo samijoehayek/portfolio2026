@@ -1,17 +1,15 @@
-// Services "laundry line" — the row of cards hangs from a fixed cable and swings
-// like washing. Page scroll AND grab-drag (with inertia) move the row; the motion
-// velocity tilts each card ±8° and it settles upright when still.
-// Transform-only, gsap.quickTo for the damped return, prefers-reduced-motion safe.
+// Services "laundry line" — the row of cards hangs from a fixed cord and swings
+// like washing. You grab-and-fling the row (with inertia) end to end; the motion
+// velocity tilts each card ±8° and it settles upright when still. The section does
+// NOT move with page scroll. Transform-only, gsap.quickTo for the damped return.
 import gsap from "gsap";
 import { Draggable } from "gsap/Draggable";
 import { InertiaPlugin } from "gsap/InertiaPlugin";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(Draggable, InertiaPlugin, ScrollTrigger);
+gsap.registerPlugin(Draggable, InertiaPlugin);
 
 const MAX_TILT = 8; // degrees — the clamp from the analysis
 const DRAG_K = 0.012; // px/s → degrees (a hard flick ≈ ±8°)
-const SCROLL_K = 0.01; // scroll px/s → degrees
 
 export function initServicesLine(): void {
   const section = document.querySelector<HTMLElement>("[data-services]");
@@ -20,24 +18,16 @@ export function initServicesLine(): void {
 
   const scroller = section.querySelector<HTMLElement>("[data-scroller]");
   const track = section.querySelector<HTMLElement>("[data-track]");
-  const cable = section.querySelector<HTMLElement>("[data-cable]");
   const inners = gsap.utils.toArray<HTMLElement>("[data-inner]");
   if (!scroller || !track || inners.length === 0) return;
 
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  // The cable spans the whole (wider-than-viewport) track and never moves.
-  const sizeCable = () => {
-    if (cable) cable.style.width = `${track.scrollWidth}px`;
-  };
-  sizeCable();
 
   // ── word-cycle on every card's journey pair ───────────────
   startWordCycle(section, reduce);
 
   if (reduce) {
     // Native horizontal scroll handles it (CSS); no inertia, no swing. Done.
-    window.addEventListener("resize", sizeCable);
     return;
   }
 
@@ -45,12 +35,10 @@ export function initServicesLine(): void {
   let minX = 0; // most-negative x (last card flush right); maxX is always 0
   const measure = () => {
     minX = Math.min(0, scroller.clientWidth - track.scrollWidth);
-    sizeCable();
   };
   measure();
 
   const clampX = (x: number) => gsap.utils.clamp(minX, 0, x);
-  const setX = (x: number) => gsap.set(track, { x });
   const getX = () => (gsap.getProperty(track, "x") as number) || 0;
 
   // ── the swing: one damped rotation setter per card ────────
@@ -59,15 +47,14 @@ export function initServicesLine(): void {
   );
   let settleTimer: number | undefined;
   const settle = () => setRot.forEach((fn) => fn(0));
-  function applySwing(velocity: number, k: number) {
-    const rot = gsap.utils.clamp(-MAX_TILT, MAX_TILT, -velocity * k); // lags travel
+  function applySwing(velocity: number) {
+    const rot = gsap.utils.clamp(-MAX_TILT, MAX_TILT, -velocity * DRAG_K); // lags travel
     setRot.forEach((fn) => fn(rot));
     window.clearTimeout(settleTimer);
     settleTimer = window.setTimeout(settle, 140); // ease upright when motion stops
   }
 
-  // ── drag + momentum ───────────────────────────────────────
-  let pointerActive = false;
+  // ── drag + momentum (the only thing that moves the row) ───
   const draggable = Draggable.create(track, {
     type: "x",
     inertia: true,
@@ -75,53 +62,15 @@ export function initServicesLine(): void {
     activeCursor: "grabbing",
     allowNativeTouchScrolling: true, // keep vertical page scroll on touch
     bounds: { minX, maxX: 0 },
-    onPress() {
-      pointerActive = true;
-    },
     onDrag(this: Draggable) {
-      applySwing(this.deltaX * 60, DRAG_K); // deltaX (px/tick) → ~px/s
+      applySwing(this.deltaX * 60); // deltaX (px/tick) → ~px/s
     },
     onThrowUpdate(this: Draggable) {
-      applySwing(this.deltaX * 60, DRAG_K);
+      applySwing(this.deltaX * 60);
     },
-    onDragEnd() {
-      pointerActive = false;
-      settle();
-    },
-    onThrowComplete() {
-      pointerActive = false;
-      settle();
-    },
+    onDragEnd: settle,
+    onThrowComplete: settle,
   })[0];
-
-  // ── scroll coupling (no pin): map section progress → x ────
-  // dragOffset preserves where the user left the row so scroll adds to it
-  // instead of snapping back to the progress-derived baseline.
-  let dragOffset = 0;
-  const baseX = (progress: number) => progress * minX; // 0 → minX
-  const syncOffset = () => {
-    dragOffset = getX() - baseX(scrollProgress);
-  };
-  let scrollProgress = 0;
-
-  // keep the offset honest once a throw/drag settles
-  draggable.addEventListener("dragend", syncOffset);
-  draggable.addEventListener("throwcomplete", syncOffset);
-
-  ScrollTrigger.create({
-    trigger: section,
-    start: "top bottom",
-    end: "bottom top",
-    onUpdate(self) {
-      scrollProgress = self.progress;
-      if (pointerActive || draggable.isThrowing) return;
-      const x = clampX(baseX(scrollProgress) + dragOffset);
-      setX(x);
-      draggable.x = x;
-      draggable.update(); // keep Draggable's internal model in sync
-      applySwing(self.getVelocity(), SCROLL_K);
-    },
-  });
 
   // ── keyboard nav (a11y) ───────────────────────────────────
   let inView = false;
@@ -145,12 +94,9 @@ export function initServicesLine(): void {
       onUpdate: () => {
         draggable.x = getX();
       },
-      onComplete: () => {
-        draggable.update();
-        dragOffset = x - baseX(scrollProgress);
-      },
+      onComplete: () => draggable.update(),
     });
-    applySwing(-dx * 4, DRAG_K);
+    applySwing(-dx * 4);
   }
 
   // ── resize ────────────────────────────────────────────────
@@ -160,8 +106,7 @@ export function initServicesLine(): void {
     rt = window.setTimeout(() => {
       measure();
       draggable.applyBounds({ minX, maxX: 0 });
-      setX(clampX(getX()));
-      ScrollTrigger.refresh();
+      gsap.set(track, { x: clampX(getX()) });
     }, 150);
   });
 }
