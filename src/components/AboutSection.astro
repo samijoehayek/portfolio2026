@@ -1,0 +1,233 @@
+---
+// About — "fly into the stadium", real-time Three.js. A pinned, scrubbed scroll
+// cranes a camera from straight-down into a broadcast angle while the stadium
+// materializes from neon-brutalist wireframe into a lit, bloomed 3D pitch you can
+// play on. Geometry is procedural; textures are Higgsfield (public/about/*.jpg).
+//   scene/geometry → src/scripts/about/experience.ts
+//   scroll + card  → src/scripts/aboutStadium.ts
+import { about } from "../data/about";
+---
+
+<section class="about" id="about" data-about aria-label="About">
+  <canvas class="about__canvas" data-canvas></canvas>
+
+  <!-- the ABOUT card (flies in) -->
+  <div class="about__card" data-card>
+    <div class="about__card-grid">
+      <h2 class="about__card-title">{about.heading}</h2>
+
+      <div class="about__col about__col--bio">
+        <span class="about__col-label">Bio</span>
+        {about.bio.map((p) => <p class="about__bio-p">{p}</p>)}
+      </div>
+
+      <div class="about__col about__col--roster">
+        <span class="about__col-label">Roster</span>
+        <ul class="about__roster">
+          {about.roster.map((r) => <li>{r}</li>)}
+        </ul>
+      </div>
+    </div>
+
+    <div class="about__bar">
+      <div class="about__score" data-scoreboard>
+        <span class="about__score-cell">
+          <span class="about__score-team">{about.score.homeLabel}</span>
+          <span class="about__score-num" data-home-score>{about.score.home}</span>
+        </span>
+        <span class="about__score-cell">
+          <span class="about__score-team">{about.score.awayLabel}</span>
+          <span class="about__score-num" data-away-score>{about.score.away}</span>
+        </span>
+      </div>
+      <div class="about__ticker" aria-hidden="true">
+        <div class="about__ticker-track">
+          <ul class="about__ticker-group">{about.awards.map((a) => <li>{a}</li>)}</ul>
+          <ul class="about__ticker-group">{about.awards.map((a) => <li>{a}</li>)}</ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="sr-only">
+    About {about.heading} — {about.bio.join(" ")} Roster: {about.roster.join(", ")}.
+  </p>
+</section>
+
+<style>
+  .about {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--c-blue);
+    color: var(--c-black);
+    border-top: var(--border);
+  }
+  .about__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none; /* we own pointer drags for the ball */
+  }
+
+  /* ── ABOUT card ─────────────────────────────────────────────── */
+  .about__card {
+    position: absolute;
+    top: calc(var(--header-h) + 0.2rem);
+    left: 50%;
+    width: 92vw;
+    max-width: 1500px;
+    transform: translateX(-50%);
+    z-index: 12;
+    background: var(--c-white);
+    color: var(--c-black);
+    border: var(--bw) solid var(--c-black);
+    border-radius: 22px;
+    box-shadow: 0 18px 0 -6px rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+    will-change: transform, opacity;
+  }
+  .about__card-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1.4fr 0.9fr;
+    gap: 1.4rem 2.2rem;
+    padding: clamp(1.2rem, 2.4vw, 2.2rem) clamp(1.4rem, 2.6vw, 2.6rem) 1.1rem;
+  }
+  .about__card-title {
+    margin: -0.12em 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 7vw, 7rem);
+    line-height: 0.82;
+    align-self: start;
+  }
+  .about__col-label {
+    display: block;
+    font-family: var(--font-nav);
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--c-black) 55%, transparent);
+    margin-bottom: 0.55rem;
+  }
+  .about__bio-p {
+    margin: 0 0 0.65rem;
+    font-family: var(--font-sans);
+    font-size: clamp(0.84rem, 1vw, 1rem);
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--c-black) 86%, transparent);
+  }
+  .about__roster {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-size: clamp(0.84rem, 1vw, 1rem);
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--c-black) 86%, transparent);
+  }
+
+  .about__bar {
+    display: flex;
+    align-items: stretch;
+    border-top: var(--bw) solid var(--c-black);
+  }
+  .about__score {
+    display: flex;
+    flex: 0 0 auto;
+  }
+  .about__score-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 0.5rem 0.9rem;
+    background: var(--c-black);
+    color: var(--c-white);
+  }
+  .about__score-cell:first-child {
+    border-right: 2px solid color-mix(in srgb, var(--c-white) 30%, transparent);
+  }
+  .about__score-team {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.52rem;
+    letter-spacing: 0.16em;
+  }
+  .about__score-num {
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    line-height: 1;
+  }
+  .about__score.is-flash .about__score-num {
+    animation: scoreFlash 0.6s ease;
+  }
+  @keyframes scoreFlash {
+    35% { color: var(--c-gold); transform: scale(1.25); }
+  }
+  .about__ticker {
+    flex: 1 1 auto;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    -webkit-mask: linear-gradient(90deg, #000 92%, transparent);
+    mask: linear-gradient(90deg, #000 92%, transparent);
+  }
+  .about__ticker-track {
+    display: flex;
+    width: max-content;
+    animation: tickerScroll 32s linear infinite;
+  }
+  .about__ticker-group {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .about__ticker-group li {
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 2.4vw, 2rem);
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 0 1.1rem;
+    color: var(--c-black);
+  }
+  .about__ticker-group li::after {
+    content: "/";
+    margin-left: 1.1rem;
+    color: color-mix(in srgb, var(--c-black) 45%, transparent);
+  }
+  @keyframes tickerScroll {
+    to { transform: translateX(-50%); }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 860px) {
+    .about__card-grid {
+      grid-template-columns: 1fr;
+      gap: 0.5rem 1rem;
+    }
+    .about__col--roster { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .about__ticker-track { animation: none; }
+  }
+</style>
+
+<script>
+  import { initAboutStadium } from "../scripts/aboutStadium";
+  initAboutStadium();
+</script>
