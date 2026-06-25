@@ -1,11 +1,13 @@
-// Hero crypto-coin halo: three metallic coins (ETH / BTC / SOL) ride ONE tilted
-// ring around the character's head, evenly spaced 120° apart at a shared speed —
-// so they hold constant separation and never bunch or merge. The ring tilt
-// routes the front of the orbit BELOW the chin (over the chest) and the back
-// BEHIND the crown, so coins circle the head without ever crossing the face.
-// An invisible depth-only plane of the head silhouette makes the back pass
-// genuinely disappear behind the head. Logos are drawn procedurally to a
-// CanvasTexture (crisp at any DPR, no asset / no bg-removal artifacts).
+// Hero crypto-coin halo: three metallic coins (ETH / BTC / SOL) ride ONE nearly
+// HORIZONTAL ring around the character's head — a plane parallel to the ground
+// (XY, with Z up), viewed almost edge-on so it reads as a flat plane the coins
+// glide along: they sweep across the FRONT (toward the viewer), pass to the
+// side, then travel around the BACK where they slide behind the head and vanish,
+// reappearing on the far side — a true 3D orbit, not a 2D circle. The 3 coins
+// are spaced 120° apart at a shared speed so they hold constant separation and
+// never bunch or merge. An invisible depth-only plane of the head silhouette
+// makes the back pass genuinely disappear behind the head (per-pixel, logical).
+// Logos are drawn procedurally to a CanvasTexture (crisp at any DPR, no asset).
 // Factory mirrors src/scripts/about/experience.ts (imperative API + single rAF).
 import * as THREE from "three";
 
@@ -26,12 +28,16 @@ export interface CoinOrbit {
 type CoinKind = "eth" | "btc" | "sol";
 
 // ── halo tuning (all radii/sizes are multiples of the head radius) ──────────
-const RING_TILT = 1.12;     // rad — ring leans toward the viewer (front=low, back=high)
+// RING_TILT is the angle of the orbit plane away from perfectly horizontal:
+//   ~0    = dead edge-on (coins glide on a flat horizontal line)
+//   ~0.35 = a shallow look-down onto a near-horizontal plane (the 3D-plane look)
+//   ~1.1  = a steep, almost face-on circle (the old "2D" look)
+const RING_TILT = 0.36;     // rad — near-horizontal plane, slight look-down
 const RING_RADIUS = 1.5;    // orbit radius from the head centre
 const RING_SPEED = 0.4;     // rad/s — slow, majestic
-const RING_YOFFSET = 0.05;  // nudge the ring centre slightly above the head centre
+const RING_YOFFSET = 0.1;   // ring-centre height vs the head centre (+ = higher)
 const COIN_SIZE = 0.26;     // coin radius (uniform → clean, uniform halo)
-const LEAN = 0.1;           // how much the cursor tilts the whole ring
+const LEAN = 0.08;          // how much the cursor tilts the whole ring
 
 // coins evenly spaced on the ring; only the axial flip speed differs
 const COIN_DEFS: { kind: CoinKind; phase: number; spin: number }[] = [
