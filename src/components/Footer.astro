@@ -1,0 +1,43 @@
+---
+// Footer — a big, thick, solid-black box. Logo + copyright, dead-centered.
+// Nothing more. (Logo is still the placeholder mark; swap when supplied.)
+import Logo from "./Logo.astro";
+
+const year = new Date().getFullYear();
+---
+
+<footer class="footer" aria-label="Footer">
+  <Logo size={72} class="footer__logo" />
+  <p class="footer__copy">© {year} SajeLabs. All rights reserved.</p>
+</footer>
+
+<style>
+  .footer {
+    position: relative;
+    z-index: 10;
+    background: var(--c-black);
+    color: var(--c-white);
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.6rem;
+    text-align: center;
+    padding: 4rem var(--gutter);
+  }
+
+  /* placeholder logo is currentColor — make it white on the black box */
+  .footer :global(.footer__logo) {
+    color: var(--c-white);
+  }
+
+  .footer__copy {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: clamp(0.85rem, 1.4vw, 1.05rem);
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.7);
+  }
+</style>
