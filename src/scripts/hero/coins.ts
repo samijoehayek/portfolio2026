@@ -33,8 +33,10 @@ type CoinKind = "eth" | "btc" | "sol";
 //   ~0.35 = a shallow look-down onto a near-horizontal plane (the 3D-plane look)
 //   ~1.1  = a steep, almost face-on circle (the old "2D" look)
 const RING_TILT = 0.36;     // rad — near-horizontal plane, slight look-down
-const RING_RADIUS = 1.5;    // orbit radius from the head centre
+const RING_RADIUS = 1.32;   // orbit radius from the head centre (smaller circle)
+const DEPTH_SQUASH = 0.78;  // <1 flattens the depth axis → less front/back protrusion
 const RING_SPEED = 0.4;     // rad/s — slow, majestic
+const RING_XOFFSET = -0.4;  // ring-centre horizontal offset (- = left)
 const RING_YOFFSET = 0.1;   // ring-centre height vs the head centre (+ = higher)
 const COIN_SIZE = 0.26;     // coin radius (uniform → clean, uniform halo)
 const LEAN = 0.08;          // how much the cursor tilts the whole ring
@@ -140,7 +142,7 @@ export function createCoinOrbit(canvas: HTMLCanvasElement): CoinOrbit {
     const wpp = worldPerPx();
     const hr = headR * wpp;
     const c = toWorld(headX, headY);
-    ring.position.set(c.x, c.y + RING_YOFFSET * hr, 0);
+    ring.position.set(c.x + RING_XOFFSET * hr, c.y + RING_YOFFSET * hr, 0);
     for (const coin of coins) coin.scale.setScalar(COIN_SIZE * hr);
     // occluder: cover the whole character frame; alphaTest keeps only the head
     const w = occBox.width * wpp;
@@ -169,7 +171,7 @@ export function createCoinOrbit(canvas: HTMLCanvasElement): CoinOrbit {
       const coin = coins[i];
       // in ring-local space: circular path; the ring's tilt makes the on-screen
       // ellipse and routes front=low / back=high
-      coin.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+      coin.position.set(Math.cos(a) * r, 0, Math.sin(a) * r * DEPTH_SQUASH);
       coin.rotation.y += def.spin * dt;          // the flip
       coin.rotation.z = 0.12 * Math.sin(t + def.phase); // tiny tumble for life
     }
