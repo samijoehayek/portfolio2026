@@ -37,8 +37,8 @@ const RING_RADIUS = 1.32;   // orbit radius from the head centre (smaller circle
 const DEPTH_SQUASH = 0.78;  // <1 flattens the depth axis → less front/back protrusion
 const RING_SPEED = 0.4;     // rad/s — slow, majestic
 const RING_XOFFSET = -0.4;  // ring-centre horizontal offset (- = left)
-const RING_YOFFSET = 0.1;   // ring-centre height vs the head centre (+ = higher)
-const COIN_SIZE = 0.26;     // coin radius (uniform → clean, uniform halo)
+const RING_YOFFSET = 1.1;   // ring-centre height vs the head centre (+ = higher; >1 floats above the crown)
+const COIN_SIZE = 0.2;      // coin radius (uniform → clean, uniform halo)
 const LEAN = 0.08;          // how much the cursor tilts the whole ring
 
 // coins evenly spaced on the ring; only the axial flip speed differs
