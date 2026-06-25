@@ -100,7 +100,16 @@ const FILL_D = `M0,300 L0,120 C130,18 400,2 640,135 C840,245 1000,275 1180,238 C
     position: relative;
     z-index: 5;
     margin-top: -60px; /* pull the panel up so the seam overlaps the stadium */
-    background: var(--c-blue);
+    /* The seam curve's FILL already paints blue from the curve down to +60px
+       (its viewBox-y 300). The flat section background must therefore START at
+       +56px — otherwise, where the waist trough dips below the section's top
+       edge, this rectangle pokes its straight blue edge ABOVE the black border
+       into the pitch. Let the curve fill own the top band; section bg owns below. */
+    background: linear-gradient(
+      to bottom,
+      transparent 0 56px,
+      var(--c-blue) 56px
+    );
     color: var(--c-white);
     /* no overflow:hidden — the seam crest, shadow + title must spill up over the stadium */
   }
