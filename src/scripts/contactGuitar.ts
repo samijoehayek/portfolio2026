@@ -62,6 +62,30 @@ export function initContactGuitar(): void {
     if (ac.state === "suspended") void ac.resume();
   };
 
+  // Browsers forbid starting audio from mouse-move alone — a real gesture
+  // (click / key / tap) is required ONCE per page. So we unlock on the first
+  // gesture ANYWHERE on the site (nav click, dragging the stadium ball, a
+  // keypress…). By the time the pointer reaches the strings, audio is already
+  // live and hover-strum just plays — no click on the guitar needed.
+  if (!reduce) {
+    const unlockEvents = ["pointerdown", "mousedown", "touchstart", "keydown"];
+    const unlock = () => {
+      ensureAudio();
+      // prime with a silent tick so the first real pluck has zero latency
+      if (ac) {
+        const b = ac.createBuffer(1, 1, ac.sampleRate);
+        const s = ac.createBufferSource();
+        s.buffer = b;
+        s.connect(ac.destination);
+        s.start();
+      }
+      if (ac && ac.state === "running") {
+        unlockEvents.forEach((ev) => window.removeEventListener(ev, unlock, true));
+      }
+    };
+    unlockEvents.forEach((ev) => window.addEventListener(ev, unlock, true));
+  }
+
   const tone = (freq: number, dur = 1.7) => {
     if (!ac || !master) return;
     const sr = ac.sampleRate;
@@ -126,22 +150,33 @@ export function initContactGuitar(): void {
     return Math.abs(strings[1].y - strings[0].y) / 2;
   }
 
+  const nearest = (svgY: number) => {
+    let idx = -1, best = BAND;
+    for (let i = 0; i < strings.length; i++) {
+      const dy = Math.abs(svgY - strings[i].y);
+      if (dy < best) { best = dy; idx = i; }
+    }
+    return idx;
+  };
+
   let lastHit = -1;
   wrap.addEventListener("pointermove", (e) => {
     const p = toSvg(e);
     if (!p) return;
-    // nearest string within its band
-    let idx = -1, best = BAND;
-    for (let i = 0; i < strings.length; i++) {
-      const dy = Math.abs(p.y - strings[i].y);
-      if (dy < best) { best = dy; idx = i; }
-    }
+    const idx = nearest(p.y);
     if (idx === -1) { lastHit = -1; return; }
     // pluck only when we cross into a *new* string (so a swipe strums each once)
     if (idx !== lastHit && !strings[idx].busy) pluck(strings[idx], p.x);
     lastHit = idx;
   });
   wrap.addEventListener("pointerleave", () => { lastHit = -1; });
+  // a tap/click on a string also plays it (unlocks audio + instant feedback)
+  wrap.addEventListener("pointerdown", (e) => {
+    const p = toSvg(e);
+    if (!p) return;
+    const idx = nearest(p.y);
+    if (idx !== -1) pluck(strings[idx], p.x);
+  });
 
   // keyboard access
   let inView = false;
