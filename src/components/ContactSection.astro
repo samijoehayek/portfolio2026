@@ -1,0 +1,258 @@
+---
+// Contact — "READY TO PLAY?" The whole section is ONE big horizontal acoustic
+// guitar on blue. A dramatic black-bordered guitar-curve seam rises over the pinned
+// stadium (casting a growing shadow on the pitch); the title follows that curve and
+// drops in letter-by-letter on scroll; the strings hover-strum for real sound.
+//   art + markup → here
+//   sound + hover-strum → src/scripts/contactGuitar.ts
+//   seam shadow + curved title + parallax → src/scripts/contactScroll.ts
+import { contact } from "../data/contact";
+
+// ── horizontal string geometry (viewBox 0 0 2000 1000) ──────────
+const X1 = 150, X2 = 2000;       // peg → off right edge
+const TOP_Y = 300, GAP = 80;     // 6 strings, evenly spaced
+const stringGeo = contact.strings.map((s, i) => {
+  const y = TOP_Y + i * GAP;
+  const w = 5 - (i / (contact.strings.length - 1)) * 3; // low E thick → high E thin
+  return { ...s, i, y, w, d: `M${X1} ${y} L${X2} ${y}` };
+});
+const fretXs = [1540, 1632, 1724, 1816, 1908, 2000];
+// The seam curve — used here for the visible border AND sampled in JS to lay the
+// title on it. Keep these two `d` strings identical to the script's EDGE_D.
+// Guitar-silhouette seam: a big, long left bout (strong sway) → deep waist trough →
+// gentle tail. Keep identical to EDGE_D in contactScroll.ts.
+const EDGE_D = "M0,120 C130,18 400,2 640,135 C840,245 1000,275 1180,238 C1320,208 1390,182 1440,190";
+const FILL_D = `M0,300 L0,120 C130,18 400,2 640,135 C840,245 1000,275 1180,238 C1320,208 1390,182 1440,190 L1440,300 Z`;
+---
+
+<section class="contact" id="contact" data-contact aria-label="Contact">
+  <!-- dramatic guitar-curve seam: shadow on pitch + blue fill + black border -->
+  <div class="contact-curve" aria-hidden="true">
+    <svg class="contact-curve__shadow" data-curve-shadow viewBox="0 0 1440 300" preserveAspectRatio="none">
+      <path d={EDGE_D} />
+    </svg>
+    <svg class="contact-curve__svg" viewBox="0 0 1440 300" preserveAspectRatio="none">
+      <path class="contact-curve__fill" d={FILL_D} />
+      <path class="contact-curve__edge" d={EDGE_D} />
+    </svg>
+  </div>
+
+  <!-- title sits ON the curve; JS positions + rotates each letter -->
+  <h2 class="contact-title" data-contact-title aria-label={contact.titleWords.join(" ")}>
+    {contact.titleWords.join(" ").split("").map((ch) => (
+      <span class="ct-char" aria-hidden="true">
+        <span class="ct-char__in">{ch === " " ? " " : ch}</span>
+      </span>
+    ))}
+  </h2>
+
+  <!-- the full-screen playable guitar -->
+  <div class="contact-guitar" data-guitar>
+    <svg class="gtr" viewBox="0 0 2000 1000" preserveAspectRatio="xMidYMid meet"
+         role="img" aria-label="A horizontal acoustic guitar — move across the strings to strum.">
+      <!-- fretboard (right neck) -->
+      <rect class="gtr-fretboard" x="1480" y="280" width="540" height="440" />
+      {fretXs.map((x) => <line class="gtr-fret" x1={x} y1="280" x2={x} y2="720" />)}
+      <circle class="gtr-inlay" cx="1586" cy="500" r="14" />
+      <circle class="gtr-inlay" cx="1770" cy="500" r="14" />
+
+      <!-- body -->
+      <path class="gtr-body" d="M300,500 C300,322 470,214 720,210 C980,206 1268,250 1272,500 C1276,748 1004,812 728,806 C470,800 300,684 300,500 Z" />
+
+      <!-- rosette: concentric blue rings + black hole -->
+      <circle class="gtr-rosette gtr-rosette--4" cx="950" cy="500" r="232" />
+      <circle class="gtr-rosette gtr-rosette--3" cx="950" cy="500" r="214" />
+      <circle class="gtr-rosette gtr-rosette--2" cx="950" cy="500" r="198" />
+      <circle class="gtr-rosette gtr-rosette--1" cx="950" cy="500" r="180" />
+      <circle class="gtr-hole" cx="950" cy="500" r="160" />
+
+      <!-- headstock (far left) -->
+      <path class="gtr-head" d="M250,250 L250,760 C150,760 96,712 100,612 C104,520 60,486 72,398 C82,322 70,240 150,236 C190,234 230,240 250,250 Z" />
+
+      <!-- nut -->
+      <rect class="gtr-nut" x="232" y="278" width="22" height="448" rx="11" />
+
+      <!-- tuning pegs -->
+      {stringGeo.map((s) => <circle class="gtr-peg" cx="158" cy={s.y} r="17" />)}
+
+      <!-- strings: fat invisible hit target + visible string (on top) -->
+      {stringGeo.map((s) => <path class="gtr-hit" data-string-hit d={s.d} />)}
+      {stringGeo.map((s) => (
+        <path class="gtr-string" data-string
+          d={s.d}
+          data-x1={X1} data-y1={s.y} data-x2={X2} data-y2={s.y}
+          data-freq={s.freq} data-key={s.key}
+          style={`stroke-width:${s.w}`} />
+      ))}
+    </svg>
+
+    <!-- contact block, bottom-right over the guitar -->
+    <address class="contact-links">
+      {contact.links.map((l) => (
+        <a class="contact-link" href={l.href}>{l.value}</a>
+      ))}
+    </address>
+  </div>
+</section>
+
+<style>
+  .contact {
+    position: relative;
+    z-index: 5;
+    margin-top: -60px; /* pull the panel up so the seam overlaps the stadium */
+    background: var(--c-blue);
+    color: var(--c-white);
+    /* no overflow:hidden — the seam crest, shadow + title must spill up over the stadium */
+  }
+
+  /* ── dramatic guitar-curve seam ─────────────────────────── */
+  .contact-curve {
+    position: absolute;
+    top: -300px; /* crest + shadow stick up over the section above */
+    left: 0;
+    width: 100%;
+    height: 360px;
+    pointer-events: none;
+    z-index: 6;
+    overflow: visible;
+  }
+  .contact-curve svg {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 300px;
+    overflow: visible;
+  }
+  .contact-curve__fill { fill: var(--c-blue); }
+  .contact-curve__edge {
+    fill: none;
+    stroke: var(--c-black);
+    stroke-width: 12;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+  }
+  /* the soft shadow the rising panel casts onto the pitch (scrubbed in JS) */
+  .contact-curve__shadow {
+    transform: translateY(-10px);
+    opacity: 0; /* JS scrubs 0 → ~0.4 — soft shadow on the pitch */
+    filter: blur(26px);
+  }
+  .contact-curve__shadow path {
+    fill: none;
+    stroke: #000;
+    stroke-width: 64;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* ── curve-following title ──────────────────────────────── */
+  .contact-title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 360px;
+    margin: 0;
+    z-index: 8;
+    pointer-events: none;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    color: var(--c-white);
+  }
+  .ct-char {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    will-change: transform;
+  }
+  .ct-char__in {
+    display: block;
+    font-size: clamp(4rem, 11vw, 11rem);
+    line-height: 1;
+    text-shadow: 0 8px 0 rgba(0, 0, 0, 0.32);
+    will-change: transform, opacity;
+  }
+
+  /* ── guitar ─────────────────────────────────────────────── */
+  .contact-guitar {
+    position: relative;
+    z-index: 7;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding-top: 60px;
+  }
+  .gtr {
+    width: 100%;
+    height: auto;
+    max-height: 100vh;
+    overflow: visible;
+    touch-action: none;
+  }
+
+  .gtr-fretboard { fill: #0b0b0b; }
+  .gtr-fret { stroke: #cfc7b2; stroke-width: 4; }
+  .gtr-inlay { fill: #efe7d2; }
+
+  .gtr-body { fill: #0a0a0a; }
+  .gtr-head { fill: #0a0a0a; }
+
+  .gtr-rosette { fill: none; }
+  .gtr-rosette--4 { stroke: #0d1a66; stroke-width: 10; }
+  .gtr-rosette--3 { stroke: var(--c-blue); stroke-width: 16; }
+  .gtr-rosette--2 { stroke: #1a2f8f; stroke-width: 8; }
+  .gtr-rosette--1 { stroke: color-mix(in srgb, var(--c-blue) 80%, var(--c-white)); stroke-width: 5; }
+  .gtr-hole { fill: #040404; }
+
+  .gtr-nut { fill: #efe7d2; }
+  .gtr-peg { fill: #efe7d2; stroke: #0a0a0a; stroke-width: 4; }
+
+  .gtr-string {
+    fill: none;
+    stroke: #efe7d2;
+    stroke-linecap: round;
+    filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.55));
+    will-change: d;
+  }
+  .gtr-hit {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 46;
+    cursor: pointer;
+  }
+
+  /* ── contact block ──────────────────────────────────────── */
+  .contact-links {
+    position: absolute;
+    right: clamp(1.5rem, 4vw, 4rem);
+    bottom: clamp(1.5rem, 5vw, 4rem);
+    z-index: 9;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+    font-style: normal;
+    pointer-events: auto;
+  }
+  .contact-link {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: clamp(1.05rem, 2vw, 1.7rem);
+    color: var(--c-white);
+    transition: color 0.18s ease;
+  }
+  .contact-link:hover { color: var(--c-gold); }
+
+  @media (max-width: 720px) {
+    .contact-guitar { min-height: 80vh; }
+  }
+</style>
+
+<script>
+  import { initContactGuitar } from "../scripts/contactGuitar";
+  import { initContactScroll } from "../scripts/contactScroll";
+  initContactGuitar();
+  initContactScroll();
+</script>
