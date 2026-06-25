@@ -33,10 +33,10 @@ type CoinKind = "eth" | "btc" | "sol";
 //   ~0.35 = a shallow look-down onto a near-horizontal plane (the 3D-plane look)
 //   ~1.1  = a steep, almost face-on circle (the old "2D" look)
 const RING_TILT = 0.36;     // rad — near-horizontal plane, slight look-down
-const RING_RADIUS = 1.32;   // orbit radius from the head centre (smaller circle)
+const RING_RADIUS = 1.12;   // orbit radius from the head centre (smaller circle)
 const DEPTH_SQUASH = 0.78;  // <1 flattens the depth axis → less front/back protrusion
 const RING_SPEED = 0.4;     // rad/s — slow, majestic
-const RING_XOFFSET = -0.4;  // ring-centre horizontal offset (- = left)
+const RING_XOFFSET = -0.18; // ring-centre horizontal offset (- = left)
 const RING_YOFFSET = 1.1;   // ring-centre height vs the head centre (+ = higher; >1 floats above the crown)
 const COIN_SIZE = 0.2;      // coin radius (uniform → clean, uniform halo)
 const LEAN = 0.08;          // how much the cursor tilts the whole ring
