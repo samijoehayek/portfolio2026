@@ -1,7 +1,8 @@
 ---
-// Interactive hero: layered illustration (clouds + character + coins) that
-// reacts to the cursor — eyes track, head tilts, blinks, clouds & coins drift.
-// Built from the cut PNG layers in /public/hero/*.webp.
+// Interactive hero: a Rive scene (clouds + cursor-tracking character rig) fills
+// the section; the glass "HEY" bio panel overlays on the left. The crypto-coin
+// orbit is paused for now — it was anchored to the old DOM character and needs
+// re-anchoring to the Rive head position.
 const bio = {
   name: "Samijoe Hayek",
   role: "full-stack & blockchain developer and consultant",
@@ -10,30 +11,9 @@ const bio = {
 ---
 
 <section class="hero" id="top" data-hero>
-  <!-- sky / clouds background (full-bleed, drifts + parallax) -->
-  <div class="hero__sky" data-sky aria-hidden="true">
-    <img class="hero__clouds" src="/hero/clouds.webp" alt="" decoding="async" />
-  </div>
-
-  <!-- 3D crypto-coin orbit (ETH / BTC / SOL circle the head) -->
-  <canvas class="hero__coincanvas" data-coincanvas aria-hidden="true"></canvas>
-
-  <!-- character (right) -->
-  <div class="hero__character" data-character>
-    <div class="char" data-char>
-      <img class="char__layer" src="/hero/body.webp" alt="" decoding="async" />
-      <div class="char__head" data-head>
-        <img class="char__layer" src="/hero/head-base.webp" alt="" decoding="async" />
-        <img class="char__layer" src="/hero/eye-whites.webp" alt="" decoding="async" />
-        <!-- pupils clipped to the eye-white shape so they can never leave the socket -->
-        <div class="char__layer char__eyeclip">
-          <img class="char__pupils" src="/hero/pupils.webp" alt="" data-pupils decoding="async" />
-        </div>
-        <img class="char__layer char__eyelids" src="/hero/eyelids.webp" alt="" data-eyelids decoding="async" />
-      </div>
-    </div>
-    <span class="sr-only">Cartoon illustration of {bio.name}</span>
-  </div>
+  <!-- Rive: clouds background + character (eyes/head track the cursor) -->
+  <canvas class="hero__rive" data-rivecanvas aria-hidden="true"></canvas>
+  <span class="sr-only">Cartoon illustration of {bio.name}</span>
 
   <!-- glass bio panel (left): two equal halves split by a dashed rule -->
   <div class="hero__panel">
@@ -59,107 +39,16 @@ const bio = {
     color: var(--c-black);
   }
 
-  /* ── sky / clouds ─────────────────────────────────────── */
-  .hero__sky {
+  /* ── Rive scene canvas (clouds + character), full-bleed behind the panel ── */
+  .hero__rive {
     position: absolute;
-    inset: -3.5% -3.5% -3.5% -3.5%; /* slight oversize for drift/parallax room */
+    inset: 0;
+    width: 100%;
+    height: 100%;
     z-index: 1;
-    translate: var(--cx, 0) var(--cy, 0); /* JS parallax (independent of drift) */
-  }
-  .hero__clouds {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    animation: cloudDrift 55s ease-in-out infinite; /* uses transform */
-  }
-  @keyframes cloudDrift {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(-3%); }
-  }
-
-  /* ── coin orbit canvas (sits ABOVE the character so coins can pass in
-     front; an in-scene depth occluder makes them vanish behind the head) ── */
-  .hero__coincanvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 5;
-    pointer-events: none;
     display: block;
+    pointer-events: none; /* cursor is read from the window, not via hit-testing */
   }
-
-  /* ── character ────────────────────────────────────────── */
-  .hero__character {
-    position: absolute;
-    bottom: 0;
-    right: clamp(0px, 2vw, 70px);
-    height: clamp(440px, 90vh, 1000px);
-    aspect-ratio: 896 / 1200;
-    z-index: 3;
-  }
-  /* soft contact shadow grounding the character */
-  .hero__character::after {
-    content: "";
-    position: absolute;
-    left: 18%;
-    right: 18%;
-    bottom: 2%;
-    height: 6%;
-    background: radial-gradient(50% 100% at 50% 100%, rgba(0, 0, 0, 0.22), transparent 72%);
-    z-index: -1;
-    pointer-events: none;
-  }
-  .char,
-  .char__head {
-    position: absolute;
-    inset: 0;
-  }
-  /* gentle idle breathing — head rides along since it's nested inside .char */
-  .char {
-    translate: var(--bodyx, 0) var(--bodyy, 0); /* JS body parallax (2.5D) */
-    animation: breathe 4.2s ease-in-out infinite;
-    will-change: transform, translate;
-  }
-  @keyframes breathe {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-0.55%) scale(1.006); }
-  }
-  .char__layer {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  /* head group: very subtle tilt, pivoting low at the neck so the neck
-     cut never opens a gap (set by JS) */
-  .char__head {
-    transform: translate(var(--hx, 0), var(--hy, 0)) rotate(var(--hr, 0deg));
-    transform-origin: 50% 92%;
-    will-change: transform;
-  }
-  /* eye socket clip: masks the pupils to the eye-white shape, so the pupils
-     stay inside the eyes no matter how far they track */
-  .char__eyeclip {
-    -webkit-mask: url("/hero/eye-whites.webp") center / 100% 100% no-repeat;
-    mask: url("/hero/eye-whites.webp") center / 100% 100% no-repeat;
-  }
-  .char__pupils {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transform: translate(var(--px, 0), var(--py, 0));
-    will-change: transform;
-  }
-  /* eyelids: hidden at rest; blink = a quick, crisp close */
-  .char__eyelids {
-    opacity: 0;
-    transition: opacity 45ms ease;
-  }
-  .char__eyelids.is-closed { opacity: 1; }
 
   /* ── glass bio panel ──────────────────────────────────── */
   .hero__panel {
@@ -212,14 +101,8 @@ const bio = {
     white-space: nowrap; border: 0;
   }
 
-  /* ── mobile: stack panel over a smaller character ─────── */
+  /* ── mobile: panel drops to the bottom over the scene ─────── */
   @media (max-width: 860px) {
-    .hero__character {
-      height: 62vh;
-      right: 50%;
-      transform: translateX(50%);
-      opacity: 0.9;
-    }
     .hero__panel {
       top: auto;
       bottom: clamp(1.5rem, 6vw, 3rem);
@@ -227,11 +110,18 @@ const bio = {
       transform: translateX(-50%);
       width: min(92vw, 460px);
     }
-    .backdrop-filter { backdrop-filter: blur(10px); }
   }
 </style>
 
 <script>
   import { initHero } from "../scripts/hero";
-  initHero();
+
+  let cleanup: (() => void) | void;
+  const boot = () => { cleanup?.(); cleanup = initHero(); };
+
+  boot(); // initial load
+  // View Transitions (ClientRouter): dispose the Rive/WASM instance on swap,
+  // re-boot after the new DOM is in place — prevents leaks across navigations.
+  document.addEventListener("astro:before-swap", () => cleanup?.());
+  document.addEventListener("astro:after-swap", boot);
 </script>
