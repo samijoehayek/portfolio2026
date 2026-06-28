@@ -22,7 +22,7 @@ export function initHero(): (() => void) | void {
   const rive = new Rive({
     src: "/hero-section.riv",
     canvas,
-    // artboard omitted → use the file's default ("Slide 16:9 - 1")
+    artboard: "hero-rive-SVG",
     stateMachines: "State Machine 1",
     autoplay: !reduce,
     autoBind: true, // bind the default ViewModelInstance → rive.viewModelInstance
