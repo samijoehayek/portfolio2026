@@ -24,6 +24,12 @@ const FRAG = /* glsl */ `
   precision highp float;
   uniform sampler2D u_image;
   uniform sampler2D u_dataTex;   // per-tile UV offset (tiles x tiles), NEAREST
+  uniform sampler2D u_depth;     // grayscale depth (1=near, 0=far); only if u_hasDepth
+  uniform float u_hasDepth;      // 0/1 — enables 2.5D parallax
+  uniform vec2  u_pointer;       // smoothed look direction, ~[-1,1]
+  uniform float u_parallax;      // max UV shift
+  uniform float u_overscan;      // <1 zooms in slightly = border buffer so the
+                                 // parallax never samples past the image edge
   uniform vec2  u_imageAspect;
   uniform float u_planeAspect;
   uniform float u_tiles;
@@ -41,7 +47,18 @@ const FRAG = /* glsl */ `
     vec2 disp = texture2D(u_dataTex, tileCenter).rg;   // this tile's offset
 
     float imgAspect = u_imageAspect.x / u_imageAspect.y;
-    vec3 col = texture2D(u_image, coverUv(vUv + disp, imgAspect, u_planeAspect)).rgb;
+    vec2 baseUv = coverUv(vUv + disp, imgAspect, u_planeAspect);
+
+    // inset slightly so the parallax offset always has headroom before the edge
+    vec2 insetUv = (baseUv - 0.5) * u_overscan + 0.5;
+
+    // 2.5D parallax: shift the sample by per-pixel depth around a mid pivot,
+    // so near elements and the far background slide opposite ways as you look.
+    // The depth map is pre-blurred, so this warp is smooth instead of tearing.
+    float d = mix(0.5, texture2D(u_depth, insetUv).r, u_hasDepth);
+    vec2 sampleUv = insetUv + u_pointer * (d - 0.5) * u_parallax;
+
+    vec3 col = texture2D(u_image, sampleUv).rgb;
 
     // dark grout at tile edges, scaled by how far the tile has shattered
     vec2 f = abs(fract(vUv * u_tiles) - 0.5) * 2.0;
@@ -71,8 +88,14 @@ export class PixelDistortionImage {
   private raf = 0;
   private paused = false;
   alive = false;
+  // 2.5D parallax (only when a depth map is supplied)
+  private hasDepth = false;
+  private depthTex?: THREE.Texture;
+  private time = 0;
+  private pCur = { x: 0, y: 0 };
+  private parFade = 1; // parallax weight: eases to 0 on hover (shatter takes over)
 
-  async init(canvas: HTMLCanvasElement, imageURL: string, opts: PixelDistortionOpts = {}): Promise<void> {
+  async init(canvas: HTMLCanvasElement, imageURL: string, opts: PixelDistortionOpts = {}, depthURL?: string): Promise<void> {
     this.grid = opts.tiles ?? 16;
     this.radius = opts.radius ?? 0.3;
     this.pushForce = opts.pushForce ?? 0.2;
@@ -89,6 +112,18 @@ export class PixelDistortionImage {
     const iw = tex.image?.width ?? 1;
     const ih = tex.image?.height ?? 1;
 
+    if (depthURL) {
+      try {
+        const dtex = await new THREE.TextureLoader().loadAsync(depthURL);
+        dtex.minFilter = THREE.LinearFilter;
+        dtex.magFilter = THREE.LinearFilter;
+        this.depthTex = dtex;
+        this.hasDepth = true;
+      } catch {
+        /* depth optional — parallax simply stays off */
+      }
+    }
+
     const g = this.grid;
     this.data = new Float32Array(g * g * 4);
     this.jitter = new Float32Array(g * g * 2);
@@ -104,6 +139,11 @@ export class PixelDistortionImage {
     this.uniforms = {
       u_image: { value: tex },
       u_dataTex: { value: this.dataTex },
+      u_depth: { value: this.depthTex ?? null },
+      u_hasDepth: { value: this.hasDepth ? 1 : 0 },
+      u_pointer: { value: new THREE.Vector2(0, 0) },
+      u_parallax: { value: 0.046 },
+      u_overscan: { value: 0.9 },
       u_imageAspect: { value: new THREE.Vector2(iw, ih) },
       u_planeAspect: { value: 1 },
       u_tiles: { value: g },
@@ -161,6 +201,22 @@ export class PixelDistortionImage {
   };
 
   private step() {
+    // 2.5D look-direction: follow the pointer while hovering, else a slow idle
+    // drift so the card stays "alive" with no interaction (and on touch).
+    if (this.hasDepth) {
+      this.time += 0.016;
+      // Parallax is the AMBIENT idle drift (the "alive" resting state). On hover
+      // it eases out so the pixel-shatter owns the cursor, then eases back in
+      // when the pointer leaves.
+      const tx = Math.sin(this.time * 0.5) * 0.6;
+      const ty = Math.cos(this.time * 0.38) * 0.42;
+      this.pCur.x += (tx - this.pCur.x) * 0.04;
+      this.pCur.y += (ty - this.pCur.y) * 0.04;
+      const fadeTarget = this.hovering ? 0 : 1;
+      this.parFade += (fadeTarget - this.parFade) * 0.06;
+      this.uniforms.u_pointer.value.set(this.pCur.x * this.parFade, this.pCur.y * this.parFade);
+    }
+
     const g = this.grid;
     const data = this.data;
     const jit = this.jitter;
@@ -212,6 +268,7 @@ export class PixelDistortionImage {
     this.mesh?.geometry.dispose();
     (this.mesh?.material as THREE.Material | undefined)?.dispose();
     this.uniforms?.u_image.value?.dispose?.();
+    this.depthTex?.dispose();
     this.dataTex?.dispose();
     this.renderer?.dispose();
     this.renderer?.forceContextLoss();
@@ -226,7 +283,7 @@ class WebGLManager {
   private live = new Map<HTMLElement, PixelDistortionImage>();
   private max = 8; // headroom for all 6 cards + buffer; well under the WebGL context limit
 
-  async acquire(host: HTMLElement, canvas: HTMLCanvasElement, url: string, opts: PixelDistortionOpts) {
+  async acquire(host: HTMLElement, canvas: HTMLCanvasElement, url: string, opts: PixelDistortionOpts, depthURL?: string) {
     const existing = this.live.get(host);
     if (existing) {
       this.live.delete(host);
@@ -239,7 +296,7 @@ class WebGLManager {
     }
     const inst = new PixelDistortionImage();
     this.live.set(host, inst);
-    await inst.init(canvas, url, opts);
+    await inst.init(canvas, url, opts, depthURL);
     return inst;
   }
   release(host: HTMLElement) {
@@ -294,7 +351,7 @@ export function initShaders(): void {
     const canvas = pane.querySelector<HTMLCanvasElement>(".preview__canvas");
     if (!canvas) return;
     try {
-      const inst = await manager.acquire(pane, canvas, image, { dpr: Math.min(window.devicePixelRatio, 2) });
+      const inst = await manager.acquire(pane, canvas, image, { dpr: Math.min(window.devicePixelRatio, 2) }, pane.dataset.depth);
       const r = canvas.getBoundingClientRect();
       inst.resize(r.width, r.height);
       inst.reset();
