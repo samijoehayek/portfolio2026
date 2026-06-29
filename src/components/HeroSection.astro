@@ -11,8 +11,12 @@ const bio = {
 ---
 
 <section class="hero" id="top" data-hero>
-  <!-- Rive: clouds background + character (eyes/head track the cursor) -->
-  <canvas class="hero__rive" data-rivecanvas aria-hidden="true"></canvas>
+  <!-- Rive: clouds background + character (eyes/head track the cursor).
+       The wrap is display:contents on desktop (no effect) and becomes a
+       portrait crop-frame on mobile so the character reads big + centred. -->
+  <div class="hero__rive-wrap" aria-hidden="true">
+    <canvas class="hero__rive" data-rivecanvas></canvas>
+  </div>
   <span class="sr-only">Cartoon illustration of {bio.name}</span>
 
   <!-- glass bio panel (left): two equal halves split by a dashed rule -->
@@ -40,6 +44,9 @@ const bio = {
   }
 
   /* ── Rive scene canvas (clouds + character), full-bleed behind the panel ── */
+  .hero__rive-wrap {
+    display: contents; /* desktop: no box — canvas positions against .hero */
+  }
   .hero__rive {
     position: absolute;
     inset: 0;
@@ -101,14 +108,61 @@ const bio = {
     white-space: nowrap; border: 0;
   }
 
-  /* ── mobile: panel drops to the bottom over the scene ─────── */
+  /* ── mobile: stop overlaying — stack a big, centred character above one
+     flush, full-width, centred HEY + bio block (thin seam, no inner rule) ── */
   @media (max-width: 860px) {
-    .hero__panel {
-      top: auto;
-      bottom: clamp(1.5rem, 6vw, 3rem);
+    .hero {
+      display: flex;
+      flex-direction: column;
+      min-height: auto;
+      padding-top: var(--header-h); /* clear the fixed header */
+    }
+
+    /* the wrap becomes a portrait crop-frame; the canvas keeps the full 16:9
+       scene but is scaled up and slid left so the (right-of-centre) character
+       reads BIG and centred, with the empty clouds cropped away */
+    .hero__rive-wrap {
+      display: block;
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+    }
+    .hero__rive {
+      inset: auto;
+      top: 0;
       left: 50%;
-      transform: translateX(-50%);
-      width: min(92vw, 460px);
+      width: auto;
+      height: 100%;
+      aspect-ratio: 1920 / 1080; /* full hero-rive-SVG scene, no internal crop */
+      transform: translateX(-72%); /* slide the character to frame centre */
+    }
+
+    /* glass box → one flush, centred, full-width section under the scene */
+    .hero__panel {
+      position: static;
+      transform: none;
+      top: auto;
+      left: auto;
+      width: 100%;
+      background: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: none;
+      border-top: 1px solid var(--c-black); /* thin seam under the scene */
+      border-radius: 0;
+      text-align: center;
+    }
+    /* no inner divider now that HEY + bio are a single centred section */
+    .hero__panel-bottom {
+      border-top: none;
+    }
+    .hero__title {
+      text-align: center;
+      transform-origin: center center;
+    }
+    .hero__bio {
+      text-align: center;
     }
   }
 </style>

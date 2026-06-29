@@ -4,8 +4,8 @@ import Logo from "./Logo.astro";
 // nav links — label + href + the word it swaps to on hover
 const links = [
   { label: "WORK", href: "#work", alt: "WORK" },
-  { label: "SERVICES", href: "#services", alt: "SERVICES" },
-  { label: "ABOUT", href: "#about", alt: "ABOUT" },
+  { label: "SERVICES", href: "#services", alt: "SERVICES", mobileHide: true },
+  { label: "ABOUT", href: "#about", alt: "ABOUT", mobileHide: true },
   { label: "CONTACT", href: "#contact", alt: "CONTACT" },
   { label: "LAB", href: "#lab", alt: "LAB", lab: true },
 ];
@@ -25,7 +25,7 @@ const chars = (s: string) => [...s].map((c) => (c === " " ? " " : c));
     {
       links.map((link) => (
         <a
-          class="site-header-nav-link"
+          class={`site-header-nav-link${link.mobileHide ? " is-desktop-only" : ""}`}
           href={link.href}
           data-nav-link
           data-lab-nav-link={link.lab ? "" : undefined}
@@ -199,6 +199,29 @@ const chars = (s: string) => [...s].map((c) => (c === " " ? " " : c));
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+  }
+
+  /* ── mobile: trim to WORK · CONTACT · LAB + CTA, single clean row ── */
+  @media (max-width: 860px) {
+    /* thin section seams on mobile */
+    .site-header {
+      border-bottom-width: 1px;
+    }
+    /* SERVICES + ABOUT drop off so the row never crowds the CTA */
+    .is-desktop-only {
+      display: none;
+    }
+    .site-header-nav {
+      gap: clamp(0.7rem, 3vw, 3rem);
+      padding-right: clamp(0.7rem, 3vw, 3rem);
+    }
+    .site-header-nav-link,
+    .site-header-cta {
+      font-size: clamp(1.05rem, 4vw, 1.8rem);
+    }
+    .site-header-cta {
+      padding: 0 clamp(0.8rem, 3vw, 2rem);
+    }
   }
 </style>
 
