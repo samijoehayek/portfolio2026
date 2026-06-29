@@ -54,13 +54,15 @@ const bio = {
   .hero__panel {
     position: absolute;
     top: 60%;
-    left: clamp(1rem, 5vw, 5rem);
+    left: clamp(1.5rem, 6.5vw, 6.5rem);
     transform: translateY(-50%);
     width: clamp(320px, 42vw, 600px);
-    min-height: clamp(290px, 42vh, 430px);
     z-index: 4;
+    /* one inset value drives top/left/bottom of EACH section and the gap
+       between them — so every spacing in the panel is the same */
+    --pad: clamp(1.4rem, 3.2vw, 2.6rem);
     display: grid;
-    grid-template-rows: 1fr 1fr; /* two equal halves */
+    grid-template-rows: auto auto; /* panel hugs its content, no extra height */
     background: color-mix(in srgb, var(--c-white) 7%, transparent);
     backdrop-filter: blur(7px) saturate(112%);
     -webkit-backdrop-filter: blur(7px) saturate(112%);
@@ -71,9 +73,7 @@ const bio = {
   }
   .hero__panel-top,
   .hero__panel-bottom {
-    display: grid;
-    align-items: center;
-    padding: clamp(0.85rem, 2.2vw, 1.7rem);
+    padding: var(--pad); /* equal inset on all four sides */
   }
   /* full-width dashed rule sits exactly between the two equal halves */
   .hero__panel-bottom {
@@ -81,15 +81,15 @@ const bio = {
   }
   .hero__title {
     font-family: var(--font-display);
-    font-size: clamp(4rem, 12vw, 9rem);
+    font-size: clamp(4.3rem, 12.8vw, 9.6rem);
     line-height: 0.82;
     letter-spacing: 0.02em;
     /* stretch the wordmark to nearly fill the width of its half (no extra height) */
-    transform: scaleX(1.42);
+    transform: scaleX(1.34);
     transform-origin: left center;
   }
   .hero__bio {
-    font-size: clamp(0.95rem, 1.3vw, 1.2rem);
+    font-size: clamp(1.02rem, 1.4vw, 1.3rem);
     line-height: 1.5;
   }
 
