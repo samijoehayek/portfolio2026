@@ -10,6 +10,7 @@ export interface Project {
   year: string; // shown by the counter
   blurb: string; // 1–2 sentences (caption + sr text)
   image: string; // /work-assets/projects/*.webp (gets the distortion shader)
+  depth?: string; // optional grayscale depth map → enables 2.5D parallax + idle drift
   href: string | null; // external URL, or null → CTA inert
   accent: string; // hex — per-card accent + shader burst tint
 }
@@ -24,6 +25,7 @@ export const projects: Project[] = [
     blurb:
       "ERC-3643 security-token platform for fractional ownership of cannabis-seed reserves — ONCHAINID KYC passports, modular compliance and a NAV oracle, deployed on Base.",
     image: "/work-assets/projects/seedvault.webp",
+    depth: "/work-assets/projects/seedvault-depth.webp", // PROTOTYPE: 2.5D parallax
     href: null,
     accent: "#3f8f3a",
   },
