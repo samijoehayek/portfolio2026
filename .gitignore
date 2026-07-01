@@ -27,3 +27,9 @@ assets/
 .agents/
 .claude/
 skills-lock.json
+
+# large work-section asset scratch (AI gens + auto-trace intermediates) —
+# the site only uses the optimized files committed in public/work-assets/.
+public/work-assets/raw/
+public/work-assets/scene-src/
+.DS_Store
