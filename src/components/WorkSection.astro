@@ -149,7 +149,25 @@ import ProjectCarousel from "./work/ProjectCarousel.astro";
 
   /* ── mobile ────────────────────────────────────────────── */
   @media (max-width: 860px) {
-    .work__word { font-size: 38vw; }
+    /* WORK wordmark — kept on the RIGHT (like desktop), sized to fit, above/behind the card */
+    .work__word { font-size: 30vw; }
+    /* background hills — natural + uncropped (a low band); do NOT crop the top.
+       (desktop width:100% / height:auto already reads as a low band on a phone) */
+    /* foreground hillside — full mobile width, ORIGINAL orientation (spans to the right) */
+    .work__front {
+      right: auto;
+      left: 50%;
+      width: 104%;
+      transform: translateX(-50%);
+    }
+    /* biker — centred, standing on the foreground road (a touch bigger) */
+    .work__biker {
+      right: auto;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 1%;
+      height: clamp(180px, 47vw, 235px);
+    }
   }
 </style>
 

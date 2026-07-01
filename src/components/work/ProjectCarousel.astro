@@ -298,9 +298,45 @@ const pad = (n: number) => String(n).padStart(2, "0");
   /* ── mobile ────────────────────────────────────────────── */
   @media (max-width: 860px) {
     .work__carousel { width: min(92vw, 520px); }
-    .work__card { grid-template-columns: 1fr; }
-    .card__preview { min-height: 190px; order: 2; }
-    .card__wordmark { font-size: 13vw; }
+    .carousel__stage { min-height: 600px; }
+    /* vertical card: info on top, image pane on the bottom. Taller card → the image
+       pane can be near-square (fits the square project renders better than a wide strip) */
+    .work__card { grid-template-columns: 1fr; min-height: 600px; }
+
+    /* info as a grid: label/client/role on the left, VIEW WORK beside the client on
+       the right; tags full-width below; the 01/06 counter is dropped on mobile so the
+       image below can be taller */
+    .card__info {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      column-gap: 0.9rem;
+      align-content: start;
+    }
+    .card__label,
+    .card__client,
+    .card__role { grid-column: 1; }
+    .card__tags { grid-column: 1 / -1; }
+    .card__foot {
+      grid-column: 2;
+      grid-row: 1 / 4;
+      align-self: center;
+      margin: 0;
+      padding: 0;
+    }
+    .card__count { display: none; }
+
+    /* near-square image pane (fits the square renders better than a wide strip) */
+    .card__preview { min-height: 340px; order: 2; }
+    .preview__img,
+    .preview__canvas {
+      top: 3px;
+      left: 3px;
+      width: calc(100% - 6px);
+      height: calc(100% - 6px);
+    }
+    /* compact the header so the taller image doesn't push the card past the viewport */
+    .card__head { padding: clamp(1rem, 3vw, 1.7rem) clamp(1rem, 2.4vw, 1.9rem); }
+    .card__wordmark { font-size: 12vw; }
     .carousel__arrow { --arrow-d: 80px; }
     .carousel__arrow--prev { left: calc(-0.5 * var(--arrow-d)); }
     .carousel__arrow--next { right: calc(-0.5 * var(--arrow-d)); }
