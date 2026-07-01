@@ -25,7 +25,7 @@ export const projects: Project[] = [
     blurb:
       "ERC-3643 security-token platform for fractional ownership of cannabis-seed reserves — ONCHAINID KYC passports, modular compliance and a NAV oracle, deployed on Base.",
     image: "/work-assets/projects/seedvault.webp",
-    depth: "/work-assets/projects/seedvault-depth.webp", // PROTOTYPE: 2.5D parallax
+    depth: "/work-assets/projects/seedvault-depth.webp", // 2.5D parallax + idle drift
     href: null,
     accent: "#3f8f3a",
   },
@@ -38,6 +38,7 @@ export const projects: Project[] = [
     blurb:
       "Bitcoin-backed P2P lending — a 2-of-3 multisig escrow built on PSBTs and BIP32/44 derivation, with automated price-triggered liquidations and real-time LTV monitoring.",
     image: "/work-assets/projects/btccore.webp",
+    depth: "/work-assets/projects/btccore-depth.webp",
     href: null,
     accent: "#f7931a",
   },
@@ -50,6 +51,7 @@ export const projects: Project[] = [
     blurb:
       "A DeFi protocol with bonding-curve and AMM mechanics (pump.fun-style), liquidity pools and yield farming — Hardhat/Foundry contracts wired to a React/Next.js front-end.",
     image: "/work-assets/projects/vellos.webp",
+    depth: "/work-assets/projects/vellos-depth.webp",
     href: null,
     accent: "#7c5cff",
   },
@@ -62,6 +64,7 @@ export const projects: Project[] = [
     blurb:
       "DAO and DeFi apps plus NFT launches (ERC-721/721A/1155) — $4M in sales across 5,000+ holders — and the OASISX P2P marketplace integration.",
     image: "/work-assets/projects/cryptoware.webp",
+    depth: "/work-assets/projects/cryptoware-depth.webp",
     href: null,
     accent: "#2b47ff",
   },
@@ -74,6 +77,7 @@ export const projects: Project[] = [
     blurb:
       "On-chain NFT event ticketing — secure ticket logic and distribution — that reached $5M in sales with 3,500+ pass holders.",
     image: "/work-assets/projects/spartan.webp",
+    depth: "/work-assets/projects/spartan-depth.webp",
     href: null,
     accent: "#e23b3b",
   },
