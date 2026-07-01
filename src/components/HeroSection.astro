@@ -125,7 +125,7 @@ const bio = {
       display: block;
       position: relative;
       width: 100%;
-      aspect-ratio: 4 / 5;
+      aspect-ratio: 4 / 5; /* original character-scene size — do NOT enlarge the character */
       overflow: hidden;
     }
     .hero__rive {
@@ -152,6 +152,8 @@ const bio = {
       border-top: 1px solid var(--c-black); /* thin seam under the scene */
       border-radius: 0;
       text-align: center;
+      /* bigger vertical padding → the HEY/bio block gets more height + spacing */
+      --pad: clamp(2.6rem, 9vw, 4rem);
     }
     /* no inner divider now that HEY + bio are a single centred section */
     .hero__panel-bottom {
@@ -160,9 +162,14 @@ const bio = {
     .hero__title {
       text-align: center;
       transform-origin: center center;
+      font-size: clamp(5.4rem, 24vw, 8.5rem); /* bigger HEY */
+      transform: scaleX(1.15); /* less horizontal stretch since the font is larger */
     }
     .hero__bio {
       text-align: center;
+      font-size: 0.92rem; /* smaller description → more contrast with the big HEY */
+      max-width: 40ch;
+      margin-inline: auto;
     }
   }
 </style>
