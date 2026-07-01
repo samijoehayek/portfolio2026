@@ -11,7 +11,7 @@ import ProjectCarousel from "./work/ProjectCarousel.astro";
 
   <!-- layered rolling-hills backdrop (BEHIND the card) -->
   <div class="work__back" aria-hidden="true">
-    <img src="/work-assets/hills-back.svg" alt="" decoding="async" />
+    <img src="/work-assets/hills-back-v2.svg" alt="" decoding="async" />
   </div>
 
   <!-- the project card carousel (6 stacked cards + arrows + markers + shader) -->
@@ -19,15 +19,13 @@ import ProjectCarousel from "./work/ProjectCarousel.astro";
 
   <!-- foreground hillside (road/hill/wall) — sits IN FRONT of the card -->
   <div class="work__front" aria-hidden="true">
-    <img src="/work-assets/hillside-trim.png" alt="" decoding="async" />
+    <img src="/work-assets/foreground.svg" alt="" decoding="async" />
   </div>
 
-  <!-- the cyclist (two layers: static body + head/bottle assembly that tilts for the drink) -->
+  <!-- animated cyclist (Rive): drinks + breathes — small, on the road at the right -->
   <div class="work__biker" aria-hidden="true">
-    <img class="biker__body" src="/work-assets/biker-body.png" alt="" decoding="async" />
-    <img class="biker__head" src="/work-assets/biker-head.png" alt="" decoding="async" />
+    <canvas class="work__biker-canvas" data-cyclist></canvas>
   </div>
-
   <span class="sr-only">Selected work.</span>
 </section>
 
@@ -49,10 +47,9 @@ import ProjectCarousel from "./work/ProjectCarousel.astro";
     position: absolute;
     left: 50%;
     bottom: 0;
-    /* scaled well past the viewport so the low hill band rises into view
-       behind the card (the art is mostly transparent sky up top) */
-    width: 120%;
-    min-width: 1600px;
+    /* full-bleed width so the whole hill scene fits horizontally; the art is
+       a wide-short hill band (2688×1125), so 100% width keeps height modest */
+    width: 100%;
     transform: translateX(-50%);
     z-index: 1;
     pointer-events: none;
@@ -61,6 +58,18 @@ import ProjectCarousel from "./work/ProjectCarousel.astro";
     width: 100%;
     height: auto;
     display: block;
+    transform-origin: bottom center;
+    /* SAM-21: subtle always-on idle drift — alive but calm. The slight scale gives
+       overscan room so the drift never reveals an edge; .work overflow:hidden clips it. */
+    animation: workBackDrift 24s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  @keyframes workBackDrift {
+    from { transform: scale(1.045) translate(-0.7%, 0); }
+    to   { transform: scale(1.045) translate(0.8%, -0.7%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .work__back img { animation: none; transform: none; }
   }
 
   /* ── foreground hillside (in FRONT of the card) ────────── */
@@ -74,41 +83,20 @@ import ProjectCarousel from "./work/ProjectCarousel.astro";
   }
   .work__front img { width: 100%; height: auto; display: block; }
 
-  /* ── the cyclist (on the road) ─────────────────────────── */
+  /* ── animated cyclist (Rive) — small, on the road at the right ─────────── */
   .work__biker {
     position: absolute;
-    right: 15%;
-    bottom: 8%;
-    height: clamp(168px, 32vh, 365px);
-    z-index: 5; /* on top of the hillside road */
+    right: 22%;
+    bottom: 6%;
+    height: clamp(235px, 39vh, 480px);
+    aspect-ratio: 1360 / 2048; /* cyclist rig portrait; Fit.Contain letterboxes the rest */
+    z-index: 5; /* on top of the foreground hill/road (z4) */
     pointer-events: none;
   }
-  /* body stays in-flow so it sizes the box; soft contact shadow grounds him on the road */
-  .biker__body {
+  .work__biker-canvas {
+    width: 100%;
     height: 100%;
-    width: auto;
     display: block;
-    filter: drop-shadow(0 14px 10px rgba(0, 0, 0, 0.35));
-  }
-  /* head + bottle assembly overlays exactly on top and tilts back for a subtle drinking gulp */
-  .biker__head {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: auto;
-    display: block;
-    transform-origin: 53.4% 24.8%; /* pivot at the shoulder/neck (705,420 in the art) */
-    /* gulp animation disabled — rigid CSS rotation looked unnatural; doing it properly in Rive */
-  }
-  @keyframes bikerGulp {
-    0%, 52% { transform: rotate(0deg); }      /* rest */
-    66% { transform: rotate(5deg); }           /* tip head back, bottle up */
-    80% { transform: rotate(5deg); }           /* hold the sip */
-    93%, 100% { transform: rotate(0deg); }     /* return to rest */
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .biker__head { animation: none; }
   }
 
   /* ── giant WORK wordmark ───────────────────────────────── */
@@ -186,4 +174,17 @@ import ProjectCarousel from "./work/ProjectCarousel.astro";
       io.observe(work);
     }
   }
+</script>
+
+<script>
+  // animated cyclist (Rive) — mirrors the hero island: boot + dispose across
+  // View-Transition swaps so the WASM instance never leaks.
+  import { initWorkCyclist } from "../scripts/work/cyclist";
+
+  let cleanup: (() => void) | void;
+  const boot = () => { cleanup?.(); cleanup = initWorkCyclist(); };
+
+  boot(); // initial load
+  document.addEventListener("astro:before-swap", () => cleanup?.());
+  document.addEventListener("astro:after-swap", boot);
 </script>
