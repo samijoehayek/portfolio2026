@@ -94,7 +94,17 @@ const titleChars = "SERVICES".split("");
 
 <style>
   .services {
-    --eye: 90px; /* cord/eyelet centre, measured down from each card's top edge */
+    /* the clip is a fluid square; the eyelet is grid-centred inside it (see
+       .service-card__clip), so its centre is ALWAYS --clip-top + --clip-size/2.
+       Deriving --eye from the same vars locks the cord to the hole at every
+       width (previously --eye was a hardcoded 90px while the eyelet scaled with
+       vw → the cord drifted below the hole as the screen narrowed). */
+    --clip-top: 8px;
+    --clip-size: clamp(114px, 13vw, 140px);
+    /* eyelet centre from the card's top edge = card border + clip top + half the
+       clip (the eyelet is grid-centred in the clip). The cord lives on .service-card
+       (outside the bordered card), so it must include the border to line up. */
+    --eye: calc(var(--bw) + var(--clip-top) + var(--clip-size) / 2); /* cord = eyelet centre */
     --cord-h: 14px;
     --gap: clamp(2rem, 3.4vw, 3.8rem); /* gap between cards (also used by the front cord) */
     position: relative;
@@ -261,20 +271,21 @@ const titleChars = "SERVICES".split("");
   /* ── the clip / tag (INSIDE the black panel), eyelet threaded by the cord ─ */
   .service-card__clip {
     position: absolute;
-    top: 8px;
+    top: var(--clip-top);
     left: 50%;
     transform: translateX(-50%);
     z-index: 1; /* over the card's black, under the front cord */
-    width: clamp(114px, 13vw, 140px);
+    width: var(--clip-size);
     aspect-ratio: 1; /* square */
     background: var(--accent);
     border: var(--bw) solid #0a0a0a;
     border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center; /* centre code · eyelet · date in the square */
-    gap: 6px;
+    /* 1fr · auto · 1fr grid → the eyelet (middle, auto) is centred in the square
+       REGARDLESS of the code/date text sizes, so its centre == the clip centre
+       == --eye. This is what keeps the cord threaded at every viewport width. */
+    display: grid;
+    grid-template-rows: 1fr auto 1fr;
+    place-items: center; /* centre code · eyelet · date each in their band */
     box-shadow: 0 8px 0 -4px rgba(0, 0, 0, 0.22);
   }
   .service-card__code {
