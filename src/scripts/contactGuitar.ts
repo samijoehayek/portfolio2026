@@ -26,6 +26,17 @@ export function initContactGuitar(): void {
   if (!svg) return;
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // Mobile (≤600px): crop the guitar's empty top/bottom bands so the strings sit
+  // close under the seam and the whole section is shorter. All art (head/body/strings
+  // y≈206–806) stays inside the crop; getScreenCTM hit-mapping adapts to the viewBox,
+  // so strumming is unaffected. Desktop/iPad keep the full framing.
+  const FULL_VB = "0 0 2000 1000";
+  const MOBILE_VB = "0 150 2000 700";
+  const applyViewBox = () =>
+    svg.setAttribute("viewBox", window.matchMedia("(max-width: 600px)").matches ? MOBILE_VB : FULL_VB);
+  applyViewBox();
+  window.addEventListener("resize", applyViewBox);
+
   const paths = Array.from(wrap.querySelectorAll<SVGPathElement>("[data-string]"));
   const hits = Array.from(wrap.querySelectorAll<SVGPathElement>("[data-string-hit]"));
   const strings: StringEl[] = paths.map((el, i) => ({

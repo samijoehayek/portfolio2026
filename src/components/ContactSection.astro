@@ -23,17 +23,27 @@ const fretXs = [1540, 1632, 1724, 1816, 1908, 2000];
 // gentle tail. Keep identical to EDGE_D in contactScroll.ts.
 const EDGE_D = "M0,120 C130,18 400,2 640,135 C840,245 1000,275 1180,238 C1320,208 1390,182 1440,190";
 const FILL_D = `M0,300 L0,120 C130,18 400,2 640,135 C840,245 1000,275 1180,238 C1320,208 1390,182 1440,190 L1440,300 Z`;
+// Mobile (≤600px) uses a GENTLER curve tuned for the squished aspect (preserve-
+// AspectRatio="none" stretches this 1440-wide viewBox to a ~390px screen, so the
+// desktop amplitude would render ~3× steeper/abrupt). It reads as a full guitar
+// silhouette: upper-bout crest → waist → lower bout → a DOWNWARD tail sweep at the
+// right edge. Keep IDENTICAL to EDGE_D_M in contactScroll.ts — the title arches on it.
+const EDGE_D_M = "M0,152 C170,144 370,126 580,122 C800,118 960,130 1120,150 C1250,166 1350,182 1440,196";
+const FILL_D_M = `M0,300 L0,152 C170,144 370,126 580,122 C800,118 960,130 1120,150 C1250,166 1350,182 1440,196 L1440,300 Z`;
 ---
 
 <section class="contact" id="contact" data-contact aria-label="Contact">
   <!-- dramatic guitar-curve seam: shadow on pitch + blue fill + black border -->
   <div class="contact-curve" aria-hidden="true">
     <svg class="contact-curve__shadow" data-curve-shadow viewBox="0 0 1440 300" preserveAspectRatio="none">
-      <path d={EDGE_D} />
+      <path class="d-desktop" d={EDGE_D} />
+      <path class="d-mobile" d={EDGE_D_M} />
     </svg>
     <svg class="contact-curve__svg" viewBox="0 0 1440 300" preserveAspectRatio="none">
-      <path class="contact-curve__fill" d={FILL_D} />
-      <path class="contact-curve__edge" d={EDGE_D} />
+      <path class="contact-curve__fill d-desktop" d={FILL_D} />
+      <path class="contact-curve__fill d-mobile" d={FILL_D_M} />
+      <path class="contact-curve__edge d-desktop" d={EDGE_D} />
+      <path class="contact-curve__edge d-mobile" d={EDGE_D_M} />
     </svg>
   </div>
 
@@ -254,8 +264,33 @@ const FILL_D = `M0,300 L0,120 C130,18 400,2 640,135 C840,245 1000,275 1180,238 C
   }
   .contact-link:hover { color: var(--c-gold); }
 
+  /* desktop + iPad render the desktop curve; the gentle mobile curve is hidden */
+  .d-mobile { display: none; }
+
   @media (max-width: 720px) {
     .contact-guitar { min-height: 80vh; }
+  }
+
+  /* ── phones (≤600px): gentle silhouette seam + arched title ─────────
+     iPad (≥768px) and desktop are untouched. The title still arches along the
+     curve (JS samples the mobile silhouette); we just shrink the letters to fit. */
+  @media (max-width: 600px) {
+    .d-desktop { display: none; }
+    .d-mobile { display: block; }
+    .contact-curve__edge { stroke-width: 9; }
+
+    .ct-char__in {
+      font-size: min(7vw, 2.6rem);
+      text-shadow: 0 5px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    /* pull the guitar up close under the title and shorten the whole section —
+       the guitar's own empty top/bottom bands are cropped in JS (mobile viewBox). */
+    .contact-guitar {
+      min-height: 42vh;
+      padding-top: 3.25rem;
+      align-items: flex-start;
+    }
   }
 </style>
 

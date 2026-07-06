@@ -8,8 +8,12 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Must match EDGE_D in ContactSection.astro (viewBox 0 0 1440 300).
+// Must match EDGE_D / EDGE_D_M in ContactSection.astro (viewBox 0 0 1440 300).
 const EDGE_D = "M0,120 C130,18 400,2 640,135 C840,245 1000,275 1180,238 C1320,208 1390,182 1440,190";
+// Mobile (≤600px) silhouette — one gentle eased hump descending to a soft downward
+// tail (no wiggles); amplitude tuned so the squished screen gives desktop-like letter
+// tilts (≈ −13°→+27°). Keep identical to EDGE_D_M in ContactSection.astro.
+const EDGE_D_M = "M0,152 C170,144 370,126 580,122 C800,118 960,130 1120,150 C1250,166 1350,182 1440,196";
 const VB_W = 1440;
 // The curve SVG renders at a fixed 300px height (preserveAspectRatio="none"),
 // its top sitting this many px above the title container's origin.
@@ -17,6 +21,11 @@ const SVG_TOP = -240;
 const Y_OFFSET = 116;  // push letters well clear of the border, onto the blue
 const F_START = 0.05;  // first letter's horizontal fraction along the curve
 const F_END = 0.85;    // last letter — title spans ~80% of the silhouette
+// Mobile equivalents: sit letters closer to the (shallower) curve, and keep them off
+// the extreme edges so the first/last glyphs aren't jammed against the screen sides.
+const Y_OFFSET_M = 64;
+const F_START_M = 0.08;
+const F_END_M = 0.84;
 
 export function initContactScroll(): void {
   const section = document.querySelector<HTMLElement>("[data-contact]");
@@ -40,7 +49,8 @@ export function initContactScroll(): void {
   probePath.setAttribute("d", EDGE_D);
   probe.appendChild(probePath);
   document.body.appendChild(probe);
-  const total = probePath.getTotalLength();
+  const setCurve = (d: string) => { probePath.setAttribute("d", d); return probePath.getTotalLength(); };
+  let total = setCurve(EDGE_D);
 
   // length L on the path whose x == targetX (x is monotonic L→R) via binary search
   const lengthAtX = (targetX: number) => {
@@ -52,13 +62,22 @@ export function initContactScroll(): void {
     return (lo + hi) / 2;
   };
 
-  // place every letter on the curve, rotated to the local tangent
+  const isMobile = () => window.matchMedia("(max-width: 600px)").matches;
+
+  // place every letter on the curve, rotated to the local tangent. Mobile samples the
+  // gentler EDGE_D_M silhouette (matching the CSS-swapped seam) with tighter offsets,
+  // so "READY TO PLAY?" still arches — same as desktop, just scaled for the phone.
   const layout = () => {
     if (!title || !chars.length) return;
+    const mobile = isMobile();
+    total = setCurve(mobile ? EDGE_D_M : EDGE_D);
+    const yOff = mobile ? Y_OFFSET_M : Y_OFFSET;
+    const fStart = mobile ? F_START_M : F_START;
+    const fEnd = mobile ? F_END_M : F_END;
     const W = title.getBoundingClientRect().width;
     const n = chars.length;
     chars.forEach((ch, i) => {
-      const f = n === 1 ? F_START : F_START + (i / (n - 1)) * (F_END - F_START);
+      const f = n === 1 ? fStart : fStart + (i / (n - 1)) * (fEnd - fStart);
       const targetX = f * VB_W;
       const L = lengthAtX(targetX);
       const p = probePath.getPointAtLength(L);
@@ -68,7 +87,7 @@ export function initContactScroll(): void {
       const dy = b.y - a.y;                // y is 1:1 (fixed 300px height)
       const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
       ch.style.left = `${(p.x / VB_W) * W}px`;
-      ch.style.top = `${SVG_TOP + p.y + Y_OFFSET}px`;
+      ch.style.top = `${SVG_TOP + p.y + yOff}px`;
       ch.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
     });
 
