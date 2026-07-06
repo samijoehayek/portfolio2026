@@ -33,10 +33,25 @@ export function initServicesLine(): void {
 
   // ── geometry ──────────────────────────────────────────────
   let minX = 0; // most-negative x (last card flush right); maxX is always 0
+  const cards = gsap.utils.toArray<HTMLElement>(
+    section.querySelectorAll(".service-card"),
+  );
+  let step = 0; // distance between consecutive card left edges (card width + gap)
   const measure = () => {
     minX = Math.min(0, scroller.clientWidth - track.scrollWidth);
+    step =
+      cards.length > 1
+        ? cards[1].offsetLeft - cards[0].offsetLeft
+        : (inners[0]?.offsetWidth ?? 360);
   };
   measure();
+
+  // Mobile: snap the row so every swipe lands a card at the same left position
+  // (the next card peeks in) — a clean "these are swipeable cards" feel. Desktop
+  // keeps its free grab-and-fling, so it stays unchanged.
+  const snapOn = window.matchMedia("(max-width: 860px)").matches;
+  const snapX = (v: number) =>
+    step ? gsap.utils.clamp(minX, 0, Math.round(v / step) * step) : v;
 
   const clampX = (x: number) => gsap.utils.clamp(minX, 0, x);
   const getX = () => (gsap.getProperty(track, "x") as number) || 0;
@@ -62,6 +77,7 @@ export function initServicesLine(): void {
     activeCursor: "grabbing",
     allowNativeTouchScrolling: true, // keep vertical page scroll on touch
     bounds: { minX, maxX: 0 },
+    snap: snapOn ? { x: snapX } : undefined, // mobile: land a card per swipe
     onDrag(this: Draggable) {
       applySwing(this.deltaX * 60); // deltaX (px/tick) → ~px/s
     },

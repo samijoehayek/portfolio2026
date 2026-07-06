@@ -89,6 +89,11 @@ const titleChars = "SERVICES".split("");
     </ul>
   </div>
 
+  <!-- mobile-only affordance: tells the user the row of cards is draggable -->
+  <p class="services__swipe-hint" aria-hidden="true">
+    <span class="services__swipe-arrow">&harr;</span> drag the line
+  </p>
+
   <span class="sr-only">What I do.</span>
 </section>
 
@@ -328,15 +333,48 @@ const titleChars = "SERVICES".split("");
 
   /* ── glassy translucent body ────────────────────────────── */
   .service-card__body {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden; /* clip the blurred glow blob to the body */
     display: flex;
     flex-direction: column;
     border-top: var(--bw) solid #0a0a0a;
     padding: clamp(2rem, 3.6vw, 3rem) var(--body-px) clamp(1.9rem, 3.2vw, 2.6rem);
+    /* frosted glass: translucent accent over the card's black + a hairline top
+       sheen. A real backdrop-filter of the section CAN'T work here — the card
+       lives inside a transformed/dragged track (a backdrop-root), the same
+       mechanic documented on SAM-7 — so the frost is built INSIDE the card via a
+       blurred accent glow (::before) instead. Matches the Work glass at a glance. */
     background: linear-gradient(
       180deg,
-      color-mix(in srgb, var(--accent) 88%, transparent),
-      color-mix(in srgb, var(--accent) 56%, transparent)
+      color-mix(in srgb, var(--accent) 74%, transparent),
+      color-mix(in srgb, var(--accent) 44%, transparent)
     );
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 42%, transparent);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+  }
+  /* the frost: a soft, heavily-blurred light+accent glow that gives the body
+     glassy depth without depending on a live backdrop */
+  .service-card__body::before {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    z-index: -1;
+    background:
+      radial-gradient(
+        45% 55% at 18% 12%,
+        color-mix(in srgb, #fff 55%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        55% 60% at 88% 108%,
+        color-mix(in srgb, var(--accent) 96%, #fff),
+        transparent 72%
+      );
+    filter: blur(26px);
+    opacity: 0.55;
+    pointer-events: none;
   }
   .service-card__label {
     font-family: var(--font-sans);
@@ -360,7 +398,9 @@ const titleChars = "SERVICES".split("");
     --half: 70px;
     position: relative;
     height: 140px;
-    margin: clamp(2rem, 3.6vw, 3.1rem) 0 0; /* breathing room → taller colored body */
+    /* full-bleed: negate the body padding so the black tech line touches the card
+       edge-to-edge on every card size (matches the divider below it) */
+    margin: clamp(2rem, 3.6vw, 3.1rem) calc(-1 * var(--body-px)) 0;
   }
   .service-card__markers::before {
     content: "";
@@ -376,6 +416,7 @@ const titleChars = "SERVICES".split("");
     position: relative;
     height: 100%;
     display: flex;
+    padding-inline: var(--body-px); /* keep the triangles/labels off the very edge */
   }
   .service-card__marker {
     flex: 1 1 0;
@@ -468,6 +509,32 @@ const titleChars = "SERVICES".split("");
     border: 0;
   }
 
+  /* ── mobile swipe affordance (shown only ≤860px) ─────────── */
+  .services__swipe-hint {
+    display: none; /* desktop: hidden (mouse users grab-and-fling) */
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    margin: 1.4rem var(--gutter) 0;
+    font-family: var(--font-nav);
+    font-size: 0.82rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--c-black) 66%, transparent);
+  }
+  .services__swipe-arrow {
+    display: inline-block;
+    font-size: 1.15rem;
+    animation: services-swipe-nudge 1.5s ease-in-out infinite;
+  }
+  @keyframes services-swipe-nudge {
+    0%, 100% { transform: translateX(-4px); }
+    50% { transform: translateX(4px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .services__swipe-arrow { animation: none; }
+  }
+
   /* ── entrance reveal (JS adds .reveal-ready, then .is-in) ── */
   .services.reveal-ready .services__title-char {
     opacity: 0;
@@ -497,8 +564,20 @@ const titleChars = "SERVICES".split("");
     .services__header {
       grid-template-columns: 1fr;
     }
+    /* tighter gap + narrower cards so the NEXT card always peeks in at the right
+       edge — the universal "there's more, swipe me" cue. Combined with the JS
+       snap, each swipe lands one card cleanly. */
+    .services {
+      --gap: 1.3rem;
+    }
     .service-card {
-      width: clamp(280px, 82vw, 380px);
+      width: clamp(258px, 78vw, 360px);
+    }
+    .services__track {
+      padding-inline: 1.15rem; /* first card near the edge, cord reads across */
+    }
+    .services__swipe-hint {
+      display: flex;
     }
   }
 
