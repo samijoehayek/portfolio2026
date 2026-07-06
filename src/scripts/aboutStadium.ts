@@ -36,10 +36,14 @@ export function initAboutStadium(): void {
 
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // pointer → ball
+  // pointer → ball. Only claim the pointer when a press actually grabs the ball;
+  // otherwise a touch swipe stays free to scroll the pinned section (the canvas is
+  // touch-action: pan-y on mobile, so vertical swipes drive the fly-in scrub).
   canvas.addEventListener("pointerdown", (e) => {
-    canvas.setPointerCapture(e.pointerId);
-    exp.pointer(e.clientX, e.clientY, "down");
+    const grabbed = exp.pointer(e.clientX, e.clientY, "down");
+    if (grabbed) {
+      try { canvas.setPointerCapture(e.pointerId); } catch { /* noop */ }
+    }
   });
   canvas.addEventListener("pointermove", (e) => exp.pointer(e.clientX, e.clientY, "move"));
   const up = (e: PointerEvent) => {

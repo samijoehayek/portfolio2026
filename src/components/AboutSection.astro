@@ -69,7 +69,14 @@ import { about } from "../data/about";
     width: 100%;
     height: 100%;
     display: block;
-    touch-action: none; /* we own pointer drags for the ball */
+    touch-action: none; /* desktop: we own pointer drags for the ball */
+  }
+  /* Touch devices: the canvas covers the whole PINNED section, so touch-action:none
+     would trap the finger and make the fly-in impossible to scroll through. Allow
+     vertical panning (drives the scrub) — horizontal drags still reach the ball, and
+     the JS only claims the pointer when a press actually grabs it. */
+  @media (pointer: coarse) {
+    .about__canvas { touch-action: pan-y; }
   }
 
   /* ── ABOUT card ─────────────────────────────────────────────── */
@@ -215,13 +222,47 @@ import { about } from "../data/about";
     border: 0;
   }
 
+  /* ── tablet / large phone (incl. iPad portrait) ─────────────────
+     Keep the roster — there's room for two columns — and cap the card to the
+     visible viewport (dvh) so title + bio + scoreboard never clip. */
   @media (max-width: 860px) {
+    .about__card {
+      width: 94vw;
+      max-height: calc(100dvh - var(--header-h) - 1.2rem);
+      overflow: hidden;
+    }
+    .about__card-grid {
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "title title"
+        "bio   roster";
+      gap: 0.7rem 1.4rem;
+      padding: clamp(1rem, 3vw, 1.6rem) clamp(1.1rem, 3.4vw, 1.8rem) 0.9rem;
+    }
+    .about__card-title {
+      grid-area: title;
+      font-size: clamp(2.4rem, 11vw, 4.2rem);
+    }
+    .about__col--bio { grid-area: bio; }
+    .about__col--roster { grid-area: roster; display: block; }
+  }
+
+  /* ── phone portrait ─────────────────────────────────────────────
+     Single column, drop the roster, tighten type so the scoreboard stays on-screen. */
+  @media (max-width: 600px) {
     .about__card-grid {
       grid-template-columns: 1fr;
-      gap: 0.5rem 1rem;
+      grid-template-areas: "title" "bio";
+      gap: 0.4rem;
     }
     .about__col--roster { display: none; }
+    .about__bio-p {
+      font-size: 0.82rem;
+      line-height: 1.45;
+      margin-bottom: 0.5rem;
+    }
   }
+
   @media (prefers-reduced-motion: reduce) {
     .about__ticker-track { animation: none; }
   }

@@ -18,21 +18,46 @@ const REVEAL_MAX = 66; // world radius that fully exposes the pitch (corner ≈ 
 const BLUE = 0x2b47ff;
 const NIGHT = 0x05071c;
 
+// The crane + scene were framed for a 16:9, 38° vertical FOV. On a narrow portrait
+// screen that same FOV collapses the horizontal view to a keyhole (only the pitch
+// centre shows). fovForAspect widens the VERTICAL FOV just enough to preserve the
+// tuned HORIZONTAL FOV as the screen narrows — but ONLY on the ≤860px mobile line,
+// so desktop is untouched. FOV_CAP stops it going full fisheye on tall phones.
+const DESIGN_FOV = 38;
+const DESIGN_ASPECT = 16 / 9;
+const FOV_CAP = 76; // ← tunable in the emulator: max vertical FOV on portrait
+function fovForAspect(aspect: number): number {
+  if (!isMobile() || aspect >= DESIGN_ASPECT) return DESIGN_FOV;
+  const hFov = 2 * Math.atan(Math.tan((DESIGN_FOV * Math.PI) / 180 / 2) * DESIGN_ASPECT);
+  const vFov = (2 * Math.atan(Math.tan(hFov / 2) / aspect) * 180) / Math.PI;
+  return Math.min(vFov, FOV_CAP);
+}
+
 export interface AboutExperience {
   setProgress(p: number): void;
   setApproach(a: number): void;
   kick(vx: number, vz: number): void;
   resize(): void;
   setActive(on: boolean): void;
-  pointer(clientX: number, clientY: number, kind: "down" | "move" | "up"): void;
+  // returns true when the gesture actually engages the ball (so the caller can claim
+  // the pointer only then, and otherwise let a touch swipe scroll the page)
+  pointer(clientX: number, clientY: number, kind: "down" | "move" | "up"): boolean;
   resetBall(): void;
   dispose(): void;
   onScore?: (side: "home" | "away") => void;
 }
 
+// mobile = the same ≤860px line the rest of the site uses. Gates every mobile-only
+// tweak below so the desktop scene stays byte-for-byte identical.
+const isMobile = () =>
+  typeof window !== "undefined" && window.matchMedia("(max-width: 860px)").matches;
+
 export function createAboutExperience(canvas: HTMLCanvasElement): AboutExperience {
+  const mobile = isMobile();
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // mobile GPUs jank hardest during the scrubbed fly-in — cap DPR so the composer
+  // (bloom + shadows) has fewer pixels to chew per frame.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.5 : 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -51,7 +76,7 @@ export function createAboutExperience(canvas: HTMLCanvasElement): AboutExperienc
   const flood = new THREE.DirectionalLight(0xffffff, 2.1);
   flood.position.set(60, 170, 70);
   flood.castShadow = true;
-  flood.shadow.mapSize.set(2048, 2048);
+  flood.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
   flood.shadow.camera.near = 20;
   flood.shadow.camera.far = 460;
   const sc = flood.shadow.camera as THREE.OrthographicCamera;
@@ -253,19 +278,22 @@ export function createAboutExperience(canvas: HTMLCanvasElement): AboutExperienc
     const hit = new THREE.Vector3();
     return raycaster.ray.intersectPlane(planeXZ, hit) ? hit : null;
   }
-  function pointer(cx: number, cy: number, kind: "down" | "move" | "up") {
-    if (ballMat.opacity < 0.5) return;
+  function pointer(cx: number, cy: number, kind: "down" | "move" | "up"): boolean {
+    if (ballMat.opacity < 0.5) return false;
     const hit = pointerToPitch(cx, cy);
     if (kind === "down") {
       if (hit && Math.hypot(hit.x - B.x, hit.z - B.z) < 7) {
         B.dragging = true; B.vx = 0; B.vz = 0;
         B.last = [{ x: hit.x, z: hit.z, t: performance.now() }];
+        return true;
       }
+      return false;
     } else if (kind === "move" && B.dragging && hit) {
       B.x = THREE.MathUtils.clamp(hit.x, -HALF_L + 2, HALF_L - 2);
       B.z = THREE.MathUtils.clamp(hit.z, -HALF_W + 2, HALF_W - 2);
       B.last.push({ x: B.x, z: B.z, t: performance.now() });
       if (B.last.length > 6) B.last.shift();
+      return true;
     } else if (kind === "up" && B.dragging) {
       B.dragging = false;
       const a = B.last[0], b = B.last[B.last.length - 1];
@@ -274,7 +302,9 @@ export function createAboutExperience(canvas: HTMLCanvasElement): AboutExperienc
         B.vx = ((b.x - a.x) / dt) * 1.2;
         B.vz = ((b.z - a.z) / dt) * 1.2;
       }
+      return true;
     }
+    return false;
   }
 
   let raf = 0;
@@ -299,6 +329,7 @@ export function createAboutExperience(canvas: HTMLCanvasElement): AboutExperienc
     composer.setSize(w, h);
     bloom.setSize(w, h);
     camera.aspect = w / h;
+    camera.fov = fovForAspect(w / h);
     camera.updateProjectionMatrix();
   }
   resize();
