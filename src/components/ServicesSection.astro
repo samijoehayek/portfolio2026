@@ -37,7 +37,7 @@ const titleChars = "SERVICES".split("");
 
       {
         services.map((s) => (
-          <li class="service-card" data-card style={`--accent:${s.accent}`}>
+          <li class="service-card" data-card style={`--accent-raw:${s.accent}`}>
             <div class="service-card__inner" data-inner tabindex="0" aria-label={s.name}>
               <!-- ONE rounded card: tall black panel (with the clip INSIDE) + glassy body -->
               <div class="service-card__card">
@@ -229,6 +229,10 @@ const titleChars = "SERVICES".split("");
 
   .service-card {
     --body-px: clamp(1.3rem, 2.4vw, 2rem); /* body side padding (reused by the full-bleed divider) */
+    /* mute the raw accent a touch (mix ~14% neutral grey) so the card colours
+       read slightly softer/more refined — subtle, not bland. One lever feeds the
+       monogram, clip, glass body + glow. */
+    --accent: color-mix(in srgb, var(--accent-raw) 86%, #808080);
     position: relative;
     z-index: 1; /* above the back cord */
     flex: 0 0 auto;
