@@ -27,7 +27,7 @@ export const projects: Project[] = [
     image: "/work-assets/projects/seedvault.webp",
     depth: "/work-assets/projects/seedvault-depth.webp", // 2.5D parallax + idle drift
     href: null,
-    accent: "#3f8f3a",
+    accent: "#5b8ad4", // steel-blue vial + electric-blue glow (sampled from image)
   },
   {
     index: 2,
@@ -53,7 +53,7 @@ export const projects: Project[] = [
     image: "/work-assets/projects/vellos.webp",
     depth: "/work-assets/projects/vellos-depth.webp",
     href: null,
-    accent: "#7c5cff",
+    accent: "#3fb56a", // green rocket-flame (the hero element of the image)
   },
   {
     index: 4,
@@ -66,7 +66,7 @@ export const projects: Project[] = [
     image: "/work-assets/projects/cryptoware.webp",
     depth: "/work-assets/projects/cryptoware-depth.webp",
     href: null,
-    accent: "#2b47ff",
+    accent: "#12a5cf", // cyan chain-glow on navy (sampled from image)
   },
   {
     index: 5,
@@ -79,7 +79,7 @@ export const projects: Project[] = [
     image: "/work-assets/projects/spartan.webp",
     depth: "/work-assets/projects/spartan-depth.webp",
     href: null,
-    accent: "#e23b3b",
+    accent: "#bb342f", // deep crimson helmet-crest on black (sampled from image)
   },
   {
     index: 6,
@@ -91,7 +91,7 @@ export const projects: Project[] = [
       "A metaverse for the Saudi Ministry of Tourism — multi-chain Solidity contracts, a React/Next.js UI, a Node.js/TsED backend and Dockerized DevOps.",
     image: "/work-assets/projects/stc.webp",
     href: null,
-    accent: "#19a0a0",
+    accent: "#7b4fd1", // purple phone/SIM + lavender field (sampled from image)
   },
 ];
 

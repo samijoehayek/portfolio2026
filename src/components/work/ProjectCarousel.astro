@@ -102,9 +102,17 @@ const pad = (n: number) => String(n).padStart(2, "0");
     border: 3px solid var(--c-black);
     border-radius: 12px;
     overflow: hidden;
-    background: var(--c-white);
+    /* transparent so the info pane's frosted glass can reveal the blurred
+       landscape/section behind the card (z1/z2 sit under this card at z3).
+       The header + preview panes paint their own opaque backgrounds. */
+    background: transparent;
     box-shadow: 0 26px 55px rgba(0, 0, 0, 0.26);
-    will-change: transform, opacity;
+    /* NOTE: do NOT set `will-change: transform`/`opacity` here. It promotes the
+       card to a "backdrop root", which confines the info pane's backdrop-filter
+       to sample *inside* the card (nothing) — silently killing the blur while
+       still showing the scene through the transparent card. GSAP applies its own
+       transforms during the slide and clears them on complete (clearProps), so
+       the resting card has no transform and the frosted blur renders correctly. */
   }
   .work__card:not([data-active]) {
     opacity: 0;
@@ -138,7 +146,35 @@ const pad = (n: number) => String(n).padStart(2, "0");
     flex-direction: column;
     gap: clamp(0.45rem, 1.3vw, 0.95rem);
     padding: var(--info-pad);
-    background: color-mix(in srgb, var(--accent, var(--c-black)) 7%, var(--c-white));
+    /* frosted glass tinted with the project's accent (Dave-Holloway style).
+       The accent sits at ~66% opacity: enough that the panel reads as its colour
+       (purple for STC, red for Spartan, …) even over the green landscape behind
+       the card, but transparent enough that the backdrop blur shows a soft,
+       unrecognisable *feeling* of the scene behind — hazy light/dark shapes,
+       never a sharp tree or hill. Tint opacity (not blur radius) is the lever for
+       how much background shows; ~16px blur keeps the shapes dissolved. */
+    background:
+      linear-gradient(
+        0deg,
+        color-mix(in srgb, var(--accent, var(--c-black)) 66%, transparent),
+        color-mix(in srgb, var(--accent, var(--c-black)) 66%, transparent)
+      ),
+      rgba(255, 255, 255, 0.05);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+    /* subtle glass edges: hairline outline + soft top highlight */
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 0 0 1px color-mix(in srgb, var(--accent, var(--c-black)) 30%, transparent);
+  }
+  /* no backdrop-filter support → solid accent tint so text stays readable and
+     the panel never looks like an empty see-through hole */
+  @supports not (
+    (backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))
+  ) {
+    .card__info {
+      background: color-mix(in srgb, var(--accent, var(--c-black)) 78%, var(--c-white));
+    }
   }
   .card__label {
     font-family: var(--font-sans);
@@ -183,7 +219,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
     top: 0; /* flat top flush against the line = one entity */
     left: 0;
     border: 6px solid transparent;
-    border-top-color: var(--accent, var(--c-black));
+    border-top-color: var(--c-black); /* always black, regardless of accent */
   }
   .card__foot {
     margin-top: auto;
