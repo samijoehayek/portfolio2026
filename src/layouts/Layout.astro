@@ -8,9 +8,13 @@ interface Props {
 }
 
 const {
-  title = "Portfolio",
-  description = "A neo-brutalist creative portfolio.",
+  title = "Samijoe Hayek — Full-stack engineer",
+  description =
+    "Samijoe Hayek — full-stack engineer building products end to end: blockchain, back-end, and the interfaces that tie them together.",
 } = Astro.props;
+
+const SITE = "https://samijoehayek.com";
+const ogImage = `${SITE}/og-image.png`;
 ---
 
 <!doctype html>
@@ -21,6 +25,24 @@ const {
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+
+    <!-- Favicons / PWA -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#2b47ff" />
+
+    <!-- Open Graph / social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={`${SITE}/`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
 
     <!-- Free stand-in fonts (swap for licensed faces later) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
