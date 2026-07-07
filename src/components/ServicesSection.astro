@@ -10,6 +10,28 @@ const titleChars = "SERVICES".split("");
 ---
 
 <section class="services" id="services" data-services aria-label="Services">
+  <!-- WAVE BACKGROUND: five layered blue ribbons behind everything (z-index 0).
+       Lightest at the back → pure --c-blue at the front, which bleeds into the
+       stadium (About) below. Shape = an SVG mask per layer; colour = CSS; the
+       breathing + scroll-parallax drift lives in src/scripts/servicesWaves.ts. -->
+  <div class="services__waves" data-waves aria-hidden="true">
+    <div class="services__wave services__wave--1" data-wave style="--i:0">
+      <div class="services__wave-inner"></div>
+    </div>
+    <div class="services__wave services__wave--2" data-wave style="--i:1">
+      <div class="services__wave-inner"></div>
+    </div>
+    <div class="services__wave services__wave--3" data-wave style="--i:2">
+      <div class="services__wave-inner"></div>
+    </div>
+    <div class="services__wave services__wave--4" data-wave style="--i:3">
+      <div class="services__wave-inner"></div>
+    </div>
+    <div class="services__wave services__wave--5" data-wave style="--i:4">
+      <div class="services__wave-inner"></div>
+    </div>
+  </div>
+
   <header class="services__header">
     <h2 class="services__title" aria-label="Services">
       {
@@ -115,7 +137,14 @@ const titleChars = "SERVICES".split("");
     position: relative;
     min-height: 138vh;
     overflow: hidden;
-    background: var(--c-blue);
+    /* ever-so-slightly darker toward the bottom; the front wave (pure --c-blue)
+       re-lightens the very bottom edge so it flows into the stadium seamlessly */
+    background: linear-gradient(
+      180deg,
+      var(--c-blue) 0%,
+      var(--c-blue) 26%,
+      color-mix(in srgb, var(--c-blue) 90%, #000) 80%
+    );
     color: var(--c-black);
     border-top: var(--border); /* same divider as the navbar / Work */
     padding: clamp(4rem, 9vh, 7rem) 0 clamp(3.5rem, 9vh, 7rem);
@@ -123,8 +152,76 @@ const titleChars = "SERVICES".split("");
     flex-direction: column;
   }
 
+  /* ── wave background ────────────────────────────────────── */
+  /* container anchored to the section bottom; crests land around the lower half /
+     bottom of the cards and fill down to the section's bottom edge (= About seam) */
+  .services__waves {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: clamp(360px, 50vh, 700px);
+    z-index: 0;
+    pointer-events: none;
+  }
+  /* each layer fills the whole container; its SVG mask decides where the crest sits,
+     so different masks (below) stagger the ribbons vertically without extra sizing */
+  .services__wave {
+    position: absolute;
+    inset: 0;
+    will-change: transform, opacity;
+  }
+  /* the coloured body: painted from its crest line down to the bottom. Overhangs the
+     viewport by one tile each side so the JS drift never exposes an edge. */
+  .services__wave-inner {
+    position: absolute;
+    inset: 0 calc(-1 * var(--tile)) 0 calc(-1 * var(--tile));
+    background-color: var(--wave-c);
+    -webkit-mask: var(--wave-mask) repeat-x left bottom / var(--tile) 100%;
+    mask: var(--wave-mask) repeat-x left bottom / var(--tile) 100%;
+    will-change: transform;
+  }
+
+  /* five in-family blues + distinct curves, back (lightest, highest) → front
+     (--c-blue, lowest). Higher z sits in front; smaller mask crest-y = higher crest. */
+  /* crest-y values sit close together (128→200 of 320) so the ribbons stack tightly
+     with a small step between each; amplitudes are a touch more pronounced so the
+     curves read. Combined with the --waves container height this places the band. */
+  .services__wave--1 {
+    z-index: 1;
+    --wave-c: color-mix(in srgb, var(--c-blue) 55%, #b9c4ff);
+    --tile: 64vw;
+    --wave-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,128 Q360,84 720,128 T1440,128 L1440,320 L0,320 Z'/%3E%3C/svg%3E");
+  }
+  .services__wave--2 {
+    z-index: 2;
+    --wave-c: color-mix(in srgb, var(--c-blue) 68%, #b9c4ff);
+    --tile: 54vw;
+    --wave-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,146 Q300,186 720,146 T1440,146 L1440,320 L0,320 Z'/%3E%3C/svg%3E");
+  }
+  .services__wave--3 {
+    z-index: 3;
+    --wave-c: color-mix(in srgb, var(--c-blue) 80%, #c1caff);
+    --tile: 72vw;
+    --wave-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,164 Q420,122 720,164 T1440,164 L1440,320 L0,320 Z'/%3E%3C/svg%3E");
+  }
+  .services__wave--4 {
+    z-index: 4;
+    --wave-c: color-mix(in srgb, var(--c-blue) 90%, #c1caff);
+    --tile: 58vw;
+    --wave-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,182 Q360,224 720,182 T1440,182 L1440,320 L0,320 Z'/%3E%3C/svg%3E");
+  }
+  .services__wave--5 {
+    z-index: 5;
+    --wave-c: var(--c-blue);
+    --tile: 66vw;
+    --wave-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,200 Q360,158 720,200 T1440,200 L1440,320 L0,320 Z'/%3E%3C/svg%3E");
+  }
+
   /* ── header ─────────────────────────────────────────────── */
   .services__header {
+    position: relative;
+    z-index: 1; /* above the wave background */
     display: grid;
     grid-template-columns: 1fr minmax(0, 27rem);
     align-items: end;
@@ -174,6 +271,7 @@ const titleChars = "SERVICES".split("");
   /* ── scroller ───────────────────────────────────────────── */
   .services__scroller {
     position: relative;
+    z-index: 1; /* above the wave background (track inside is z-index 2) */
     margin-top: clamp(2rem, 5vh, 4rem);
     flex: 1;
     padding-top: 44px; /* a little blue above the cards */
@@ -562,6 +660,18 @@ const titleChars = "SERVICES".split("");
     opacity: 1;
     transform: translateY(0);
   }
+  /* waves rise + fade into place, staggered back → front ("jump in") */
+  .services.reveal-ready .services__wave {
+    opacity: 0;
+    transform: translateY(70px);
+    transition:
+      opacity 0.7s ease calc(0.25s + var(--i) * 0.09s),
+      transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) calc(0.25s + var(--i) * 0.09s);
+  }
+  .services.reveal-ready.is-in .services__wave {
+    opacity: 1;
+    transform: translateY(0);
+  }
 
   /* ── mobile ─────────────────────────────────────────────── */
   @media (max-width: 860px) {
@@ -583,6 +693,10 @@ const titleChars = "SERVICES".split("");
     .services__swipe-hint {
       display: flex;
     }
+    /* shorter wave band so the ribbons stay a calm backdrop on tall phone layouts */
+    .services__waves {
+      height: clamp(300px, 42vh, 560px);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -595,6 +709,7 @@ const titleChars = "SERVICES".split("");
 
 <script>
   import { initServicesLine } from "../scripts/servicesLine";
+  import { initServicesWaves } from "../scripts/servicesWaves";
 
   const section = document.querySelector<HTMLElement>("[data-services]");
   if (section) {
@@ -615,4 +730,5 @@ const titleChars = "SERVICES".split("");
   }
 
   initServicesLine();
+  initServicesWaves();
 </script>
