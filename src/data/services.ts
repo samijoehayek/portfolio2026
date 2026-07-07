@@ -27,7 +27,7 @@ export const services: Service[] = [
       "Liquidations",
     ],
     journey: ["SIGN", "SETTLE"],
-    accent: "#f7931a",
+    accent: "#ff2d63", // rainbow 1/7 — strong red-pink
   },
   {
     index: 2,
@@ -43,7 +43,7 @@ export const services: Service[] = [
       "Multi-chain",
     ],
     journey: ["CODE", "CHAIN"],
-    accent: "#7c5cff",
+    accent: "#ffc61a", // rainbow 2/7 — strong yellow
   },
   {
     index: 3,
@@ -58,7 +58,7 @@ export const services: Service[] = [
       "Tokenomics",
     ],
     journey: ["SWAP", "YIELD"],
-    accent: "#19a0a0",
+    accent: "#b6e529", // rainbow 3/7 — strong yellow-green
   },
   {
     index: 4,
@@ -73,7 +73,7 @@ export const services: Service[] = [
       "Fractional Ownership",
     ],
     journey: ["REAL", "ONCHAIN"],
-    accent: "#3f8f3a",
+    accent: "#22c55e", // rainbow 4/7 — strong green
   },
   {
     index: 5,
@@ -88,7 +88,7 @@ export const services: Service[] = [
       "Postgres / Mongo",
     ],
     journey: ["APP", "API"],
-    accent: "#2b47ff",
+    accent: "#16cfe0", // rainbow 5/7 — cyan
   },
   {
     index: 6,
@@ -103,7 +103,7 @@ export const services: Service[] = [
       "$9M+ Sales",
     ],
     journey: ["MINT", "LAUNCH"],
-    accent: "#e23b3b",
+    accent: "#2f6bff", // rainbow 6/7 — strong blue
   },
   {
     index: 7,
@@ -119,7 +119,7 @@ export const services: Service[] = [
       "Monitoring",
     ],
     journey: ["BUILD", "SHIP"],
-    accent: "#ffae00",
+    accent: "#8b3dff", // rainbow 7/7 — purple (last card → last colour; magenta unused)
   },
 ];
 

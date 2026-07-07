@@ -74,6 +74,13 @@ const titleChars = "SERVICES".split("");
                 </div>
 
                 <div class="service-card__body">
+                  <!-- blurred copy of the section waves, behind the accent tint -->
+                  <div class="service-card__glass" aria-hidden="true">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <span class={`service-card__glass-wave service-card__glass-wave--${n}`} />
+                    ))}
+                  </div>
+
                   <span class="service-card__label">Service</span>
                   <h3 class="service-card__name">{s.name}</h3>
 
@@ -134,6 +141,19 @@ const titleChars = "SERVICES".split("");
     --eye: calc(var(--bw) + var(--clip-top) + var(--clip-size) / 2); /* cord = eyelet centre */
     --cord-h: 14px;
     --gap: clamp(2rem, 3.4vw, 3.8rem); /* gap between cards (also used by the front cord) */
+    /* shared wave colours + shapes — consumed by the section background waves AND by
+       the blurred copy behind each card body (SAM-29 through-glass look), so both
+       read as the same water. */
+    --wv-c-1: color-mix(in srgb, var(--c-blue) 55%, #b9c4ff);
+    --wv-c-2: color-mix(in srgb, var(--c-blue) 68%, #b9c4ff);
+    --wv-c-3: color-mix(in srgb, var(--c-blue) 80%, #c1caff);
+    --wv-c-4: color-mix(in srgb, var(--c-blue) 90%, #c1caff);
+    --wv-c-5: var(--c-blue);
+    --wv-mask-1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,128 Q360,84 720,128 T1440,128 L1440,320 L0,320 Z'/%3E%3C/svg%3E");
+    --wv-mask-2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,146 Q300,186 720,146 T1440,146 L1440,320 L0,320 Z'/%3E%3C/svg%3E");
+    --wv-mask-3: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,164 Q420,122 720,164 T1440,164 L1440,320 L0,320 Z'/%3E%3C/svg%3E");
+    --wv-mask-4: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,182 Q360,224 720,182 T1440,182 L1440,320 L0,320 Z'/%3E%3C/svg%3E");
+    --wv-mask-5: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,200 Q360,158 720,200 T1440,200 L1440,320 L0,320 Z'/%3E%3C/svg%3E");
     position: relative;
     min-height: 138vh;
     overflow: hidden;
@@ -327,10 +347,11 @@ const titleChars = "SERVICES".split("");
 
   .service-card {
     --body-px: clamp(1.3rem, 2.4vw, 2rem); /* body side padding (reused by the full-bleed divider) */
-    /* mute the raw accent a touch (mix ~14% neutral grey) so the card colours
-       read slightly softer/more refined — subtle, not bland. One lever feeds the
-       monogram, clip, glass body + glow. */
-    --accent: color-mix(in srgb, var(--accent-raw) 86%, #808080);
+    /* top half (clip square + monogram word) wears the STRONG rainbow accent as-is;
+       the glassy bottom half wears a faded, translucent version so the blurred waves
+       read through it (SAM-29). */
+    --accent: var(--accent-raw);
+    --accent-glass: color-mix(in srgb, var(--accent) 60%, transparent);
     position: relative;
     z-index: 1; /* above the back cord */
     flex: 0 0 auto;
@@ -437,47 +458,63 @@ const titleChars = "SERVICES".split("");
   .service-card__body {
     position: relative;
     isolation: isolate;
-    overflow: hidden; /* clip the blurred glow blob to the body */
+    overflow: hidden; /* clip the blurred wave copy to the body */
     display: flex;
     flex-direction: column;
     border-top: var(--bw) solid #0a0a0a;
     padding: clamp(2rem, 3.6vw, 3rem) var(--body-px) clamp(1.9rem, 3.2vw, 2.6rem);
-    /* frosted glass: translucent accent over the card's black + a hairline top
-       sheen. A real backdrop-filter of the section CAN'T work here — the card
-       lives inside a transformed/dragged track (a backdrop-root), the same
-       mechanic documented on SAM-7 — so the frost is built INSIDE the card via a
-       blurred accent glow (::before) instead. Matches the Work glass at a glance. */
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent) 74%, transparent),
-      color-mix(in srgb, var(--accent) 44%, transparent)
-    );
-    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 42%, transparent);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    backdrop-filter: blur(16px) saturate(140%);
+    /* Glass, self-contained (SAM-29). A live backdrop-filter CAN'T sample the section
+       waves here — the card lives inside the transformed/dragged track (a backdrop
+       root, per SAM-7/27), which walls the waves off. So the effect is built INSIDE
+       the body: a blurred copy of the wave layers (.service-card__glass, z-2) + a
+       faded accent tint over it (::before, z-1) + content on top. */
+    background: transparent;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, #fff 46%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent);
   }
-  /* the frost: a soft, heavily-blurred light+accent glow that gives the body
-     glassy depth without depending on a live backdrop */
+  /* the faded accent tint — sits ABOVE the blurred waves (z-2) and BELOW the content,
+     so the body reads as its colour while the water stays visible through it */
   .service-card__body::before {
     content: "";
     position: absolute;
-    inset: -30%;
+    inset: 0;
     z-index: -1;
-    background:
-      radial-gradient(
-        45% 55% at 18% 12%,
-        color-mix(in srgb, #fff 55%, transparent),
-        transparent 70%
-      ),
-      radial-gradient(
-        55% 60% at 88% 108%,
-        color-mix(in srgb, var(--accent) 96%, #fff),
-        transparent 72%
-      );
-    filter: blur(26px);
-    opacity: 0.55;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 64%, transparent),
+      var(--accent-glass)
+    );
     pointer-events: none;
   }
+  /* the blurred wave copy behind the tint — the section wave shapes/colours, blurred
+     to a soft haze (kept pale so warm accents don't muddy) */
+  .service-card__glass {
+    position: absolute;
+    inset: -16% -14% -14%; /* overscan so the blur has no hard edge inside the body */
+    z-index: -2;
+    overflow: hidden;
+    border-radius: inherit;
+    filter: blur(16px) saturate(140%);
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--wv-c-1) 42%, #fff),
+      color-mix(in srgb, var(--wv-c-3) 46%, #fff)
+    );
+  }
+  .service-card__glass-wave {
+    position: absolute;
+    inset: 0 -22% 0 -22%;
+    background-color: color-mix(in srgb, var(--gwc) 48%, #fff);
+    -webkit-mask: var(--gwm) repeat-x left bottom / var(--gwt) 100%;
+    mask: var(--gwm) repeat-x left bottom / var(--gwt) 100%;
+  }
+  .service-card__glass-wave--1 { z-index: 1; --gwc: var(--wv-c-1); --gwm: var(--wv-mask-1); --gwt: 82%; }
+  .service-card__glass-wave--2 { z-index: 2; --gwc: var(--wv-c-2); --gwm: var(--wv-mask-2); --gwt: 70%; }
+  .service-card__glass-wave--3 { z-index: 3; --gwc: var(--wv-c-3); --gwm: var(--wv-mask-3); --gwt: 92%; }
+  .service-card__glass-wave--4 { z-index: 4; --gwc: var(--wv-c-4); --gwm: var(--wv-mask-4); --gwt: 76%; }
+  .service-card__glass-wave--5 { z-index: 5; --gwc: var(--wv-c-5); --gwm: var(--wv-mask-5); --gwt: 86%; }
   .service-card__label {
     font-family: var(--font-sans);
     font-weight: 700;
