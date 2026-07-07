@@ -74,13 +74,6 @@ const titleChars = "SERVICES".split("");
                 </div>
 
                 <div class="service-card__body">
-                  <!-- blurred copy of the section waves, behind the accent tint -->
-                  <div class="service-card__glass" aria-hidden="true">
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <span class={`service-card__glass-wave service-card__glass-wave--${n}`} />
-                    ))}
-                  </div>
-
                   <span class="service-card__label">Service</span>
                   <h3 class="service-card__name">{s.name}</h3>
 
@@ -180,6 +173,10 @@ const titleChars = "SERVICES".split("");
     left: 0;
     right: 0;
     bottom: 0;
+    /* low, calm band anchored to the bottom (the position we settled on). The
+       frosted cards sit ABOVE it and blur the blue field behind them — the waves
+       staying low is deliberate so their scroll-drift isn't behind the glass
+       (which is what caused the scroll jitter). */
     height: clamp(360px, 50vh, 700px);
     z-index: 0;
     pointer-events: none;
@@ -199,6 +196,8 @@ const titleChars = "SERVICES".split("");
     background-color: var(--wave-c);
     -webkit-mask: var(--wave-mask) repeat-x left bottom / var(--tile) 100%;
     mask: var(--wave-mask) repeat-x left bottom / var(--tile) 100%;
+    /* the low waves sit BELOW the cards (not sampled by the glass), so promoting them
+       to their own layer is safe here and keeps the scroll-drift smooth. */
     will-change: transform;
   }
 
@@ -312,7 +311,9 @@ const titleChars = "SERVICES".split("");
     align-items: flex-start;
     gap: var(--gap);
     width: max-content;
-    will-change: transform;
+    /* NO will-change: transform — it would promote the track to a compositing
+       backdrop-root and silently kill the cards' backdrop-filter. DH keeps the
+       moving ancestors un-composited (plain GSAP transform) so the blur survives. */
     position: relative;
     z-index: 2;
     touch-action: pan-y; /* let Lenis keep vertical scroll; we own horizontal */
@@ -363,7 +364,7 @@ const titleChars = "SERVICES".split("");
   .service-card__inner {
     position: relative;
     transform-origin: 50% var(--eye); /* the eyelet — the pendulum pivot */
-    will-change: transform;
+    /* NO will-change — same reason as the track: it would break the body's blur */
     outline: none;
   }
   .service-card__inner:focus-visible {
@@ -377,7 +378,9 @@ const titleChars = "SERVICES".split("");
     border: var(--bw) solid #0a0a0a;
     border-radius: 40px; /* a little more rounded */
     overflow: hidden;
-    background: var(--c-black);
+    /* transparent BEHIND the body so the frosted body can blur the section waves
+       through it (the top panel paints its own black) — DH-style real glass. */
+    background: transparent;
   }
   .service-card__top {
     position: relative;
@@ -457,64 +460,28 @@ const titleChars = "SERVICES".split("");
   /* ── glassy translucent body ────────────────────────────── */
   .service-card__body {
     position: relative;
-    isolation: isolate;
-    overflow: hidden; /* clip the blurred wave copy to the body */
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     border-top: var(--bw) solid #0a0a0a;
     padding: clamp(2rem, 3.6vw, 3rem) var(--body-px) clamp(1.9rem, 3.2vw, 2.6rem);
-    /* Glass, self-contained (SAM-29). A live backdrop-filter CAN'T sample the section
-       waves here — the card lives inside the transformed/dragged track (a backdrop
-       root, per SAM-7/27), which walls the waves off. So the effect is built INSIDE
-       the body: a blurred copy of the wave layers (.service-card__glass, z-2) + a
-       faded accent tint over it (::before, z-1) + content on top. */
-    background: transparent;
+    /* REAL frosted glass, DH-style (SAM-29). With will-change removed from the track
+       + inner (no compositing backdrop-root walls the waves off), this live
+       backdrop-filter genuinely samples the section waves painted behind the
+       transparent card. A translucent accent gradient over the blur = the faded
+       colour; kept fairly opaque so warm accents read clean while the water shows. */
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 80%, transparent),
+      color-mix(in srgb, var(--accent) 66%, transparent)
+    );
+    -webkit-backdrop-filter: blur(8px) saturate(135%);
+    backdrop-filter: blur(8px) saturate(135%);
+    /* glass edges: bright top sheen + hairline accent outline */
     box-shadow:
-      inset 0 1px 0 color-mix(in srgb, #fff 46%, transparent),
-      inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent);
+      inset 0 1px 0 color-mix(in srgb, #fff 48%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
   }
-  /* the faded accent tint — sits ABOVE the blurred waves (z-2) and BELOW the content,
-     so the body reads as its colour while the water stays visible through it */
-  .service-card__body::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent) 64%, transparent),
-      var(--accent-glass)
-    );
-    pointer-events: none;
-  }
-  /* the blurred wave copy behind the tint — the section wave shapes/colours, blurred
-     to a soft haze (kept pale so warm accents don't muddy) */
-  .service-card__glass {
-    position: absolute;
-    inset: -16% -14% -14%; /* overscan so the blur has no hard edge inside the body */
-    z-index: -2;
-    overflow: hidden;
-    border-radius: inherit;
-    filter: blur(16px) saturate(140%);
-    pointer-events: none;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--wv-c-1) 42%, #fff),
-      color-mix(in srgb, var(--wv-c-3) 46%, #fff)
-    );
-  }
-  .service-card__glass-wave {
-    position: absolute;
-    inset: 0 -22% 0 -22%;
-    background-color: color-mix(in srgb, var(--gwc) 48%, #fff);
-    -webkit-mask: var(--gwm) repeat-x left bottom / var(--gwt) 100%;
-    mask: var(--gwm) repeat-x left bottom / var(--gwt) 100%;
-  }
-  .service-card__glass-wave--1 { z-index: 1; --gwc: var(--wv-c-1); --gwm: var(--wv-mask-1); --gwt: 82%; }
-  .service-card__glass-wave--2 { z-index: 2; --gwc: var(--wv-c-2); --gwm: var(--wv-mask-2); --gwt: 70%; }
-  .service-card__glass-wave--3 { z-index: 3; --gwc: var(--wv-c-3); --gwm: var(--wv-mask-3); --gwt: 92%; }
-  .service-card__glass-wave--4 { z-index: 4; --gwc: var(--wv-c-4); --gwm: var(--wv-mask-4); --gwt: 76%; }
-  .service-card__glass-wave--5 { z-index: 5; --gwc: var(--wv-c-5); --gwm: var(--wv-mask-5); --gwt: 86%; }
   .service-card__label {
     font-family: var(--font-sans);
     font-weight: 700;
