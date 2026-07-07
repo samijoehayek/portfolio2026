@@ -84,12 +84,16 @@ export function initAboutStadium(): void {
     rt = window.setTimeout(() => { exp.resize(); ScrollTrigger.refresh(); }, 150);
   });
 
+  // The card is centred with CSS `left:50% translateX(-50%)`. Because GSAP also drives
+  // its transform (the fly-in), we must pin `xPercent:-50` on EVERY card tween — else on
+  // a ScrollTrigger.refresh() (fires on resize; tween is invalidateOnRefresh) GSAP re-reads
+  // the transform and can re-cache the -50% as a stale PIXEL x, shifting the card sideways.
   if (reduce) {
     exp.setProgress(1);
-    if (card) gsap.set(card, { yPercent: 0, opacity: 1 });
+    if (card) gsap.set(card, { xPercent: -50, yPercent: 0, opacity: 1 });
     return;
   }
-  if (card) gsap.set(card, { yPercent: -120, opacity: 0 });
+  if (card) gsap.set(card, { xPercent: -50, yPercent: -120, opacity: 0 });
 
   const mm = gsap.matchMedia();
   mm.add("(min-width: 861px)", () => build(5.2));
@@ -123,8 +127,8 @@ export function initAboutStadium(): void {
     if (card)
       tl.fromTo(
         card,
-        { yPercent: -120, opacity: 0 },
-        { yPercent: 0, opacity: 1, duration: 0.16, ease: "power3.out" },
+        { xPercent: -50, yPercent: -120, opacity: 0 },
+        { xPercent: -50, yPercent: 0, opacity: 1, duration: 0.16, ease: "power3.out" },
         0.62,
       );
     return () => { approach.kill(); tl.scrollTrigger?.kill(); tl.kill(); };
