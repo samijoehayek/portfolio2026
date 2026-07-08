@@ -21,7 +21,9 @@ npm-debug.log*
 
 # working assets — personal reference photos + large source PSDs/PNGs.
 # The site only needs the optimized files in public/hero/, which ARE committed.
-assets/
+# Anchored to the repo root so it does NOT catch src/assets/ (Astro-optimized
+# source images that MUST be tracked for the build).
+/assets/
 
 # local tooling / agent skills / editor + session config
 .agents/

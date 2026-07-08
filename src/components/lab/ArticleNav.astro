@@ -1,0 +1,192 @@
+---
+// End-of-article navigation: prev/next entries + a back-to-lab link and a
+// contact CTA. Prev/next are optional (first/last article).
+import { Image } from "astro:assets";
+import type { LabEntry } from "../../data/lab";
+
+interface Props {
+  prev?: LabEntry;
+  next?: LabEntry;
+}
+
+const { prev, next } = Astro.props;
+
+const pair = [
+  { entry: prev, dir: "Previous", arrow: "←" },
+  { entry: next, dir: "Next", arrow: "→" },
+].filter((p) => p.entry) as { entry: LabEntry; dir: string; arrow: string }[];
+---
+
+<nav class="anav" aria-label="More articles">
+  {
+    pair.length > 0 && (
+      <ul class="anav__pair" role="list">
+        {pair.map(({ entry, dir, arrow }) => (
+          <li>
+            <a
+              class:list={["anav__card", { "anav__card--next": dir === "Next" }]}
+              href={`/lab/${entry.id}`}
+              style={`--accent:${entry.data.accent}`}
+            >
+              <span class="anav__thumb">
+                <Image src={entry.data.cover} alt="" widths={[160, 260]} sizes="120px" />
+              </span>
+              <span class="anav__meta">
+                <span class="anav__dir">
+                  {dir === "Previous" && <span class="anav__arrow">{arrow}</span>}
+                  {dir}
+                  {dir === "Next" && <span class="anav__arrow">{arrow}</span>}
+                </span>
+                <span class="anav__title">{entry.data.title}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  <div class="anav__foot">
+    <a class="anav__back" href="/lab">
+      <span aria-hidden="true">←</span> Back to the Lab
+    </a>
+    <a class="anav__cta" href="/#contact">
+      Got a project? Let's talk <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</nav>
+
+<style>
+  .anav {
+    max-width: 1100px;
+    margin: clamp(3.5rem, 8vh, 6rem) auto 0;
+    padding: 0 var(--gutter);
+  }
+
+  .anav__pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1rem, 2.5vw, 1.8rem);
+    margin-bottom: clamp(2rem, 5vh, 3.5rem);
+  }
+
+  .anav__card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+    padding: 0.8rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: var(--bw) solid var(--c-black);
+    box-shadow: 6px 6px 0 0 var(--c-black);
+    color: var(--c-white);
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s ease;
+  }
+  .anav__card--next {
+    flex-direction: row-reverse;
+    text-align: right;
+  }
+  .anav__card:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 0 var(--accent);
+    border-color: var(--accent);
+  }
+
+  .anav__thumb {
+    flex: none;
+    width: 84px;
+    height: 84px;
+    overflow: hidden;
+    border: var(--bw) solid var(--c-black);
+  }
+  .anav__thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .anav__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+  .anav__dir {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.7rem;
+    color: var(--c-gold);
+  }
+  .anav__card--next .anav__dir {
+    justify-content: flex-end;
+  }
+  .anav__title {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    line-height: 1;
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+    color: var(--c-white);
+  }
+
+  .anav__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-top: clamp(1.5rem, 4vh, 2.5rem);
+    border-top: var(--bw) solid var(--c-black);
+  }
+  .anav__back,
+  .anav__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.82rem;
+    transition: color 0.2s ease;
+  }
+  .anav__back {
+    color: rgba(255, 255, 255, 0.75);
+  }
+  .anav__back:hover {
+    color: var(--c-white);
+  }
+  .anav__cta {
+    color: var(--c-black);
+    background: var(--c-gold);
+    padding: 0.7em 1.2em;
+    border: var(--bw) solid var(--c-black);
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+  .anav__cta:hover {
+    background: var(--c-black);
+    color: var(--c-gold);
+  }
+
+  @media (max-width: 640px) {
+    .anav__pair {
+      grid-template-columns: 1fr;
+    }
+    .anav__foot {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .anav__cta {
+      justify-content: center;
+    }
+  }
+</style>

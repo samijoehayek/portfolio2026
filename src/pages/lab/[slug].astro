@@ -1,0 +1,501 @@
+---
+import { getCollection, render } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import ArticleToc from "../../components/lab/ArticleToc.astro";
+import ArticleNav from "../../components/lab/ArticleNav.astro";
+import { sortByDate, readingMinutes, shortDate, pad } from "../../data/lab";
+
+export async function getStaticPaths() {
+  const all = (await getCollection("lab", ({ data }) => !data.draft)).sort(sortByDate); // newest first
+  const total = all.length;
+  return all.map((entry, i) => ({
+    params: { slug: entry.id },
+    props: {
+      entry,
+      number: total - i, // newest = Nº total, oldest = Nº 01
+      // reading order: "next" = newer (up the list), "prev" = older (down)
+      next: all[i - 1],
+      prev: all[i + 1],
+    },
+  }));
+}
+
+const { entry, number, prev, next } = Astro.props;
+const { title, blurb, date, tags, cover, accent } = entry.data;
+const { Content, headings } = await render(entry);
+const mins = readingMinutes(entry.body, entry.data.readingTime);
+
+// split the title into words → chars for the masked masthead-style reveal
+const titleWords = title.split(" ").map((w) => [...w]);
+---
+
+<Layout title={`${title} — The Lab`} description={blurb}>
+  <Header />
+
+  <div class="reading-progress" data-progress aria-hidden="true"></div>
+
+  <main class="article" data-article style={`--accent:${accent}`}>
+    <article>
+      <header class="article__head">
+        <a class="article__back" href="/lab">
+          <span aria-hidden="true">←</span> The Lab
+        </a>
+
+        <p class="article__eyebrow" data-reveal-fade>
+          <span class="article__no">Nº {pad(number)}</span>
+          <span class="article__dot" aria-hidden="true">◆</span>
+          <span class="article__tags">
+            {tags.map((t) => <span class="article__tag">{t}</span>)}
+          </span>
+          <span class="article__dot" aria-hidden="true">◆</span>
+          <span>{shortDate(date)}</span>
+          <span class="article__dot" aria-hidden="true">◆</span>
+          <span>{mins} min read</span>
+        </p>
+
+        <h1 class="article__title" data-title aria-label={title}>
+          {
+            titleWords.map((chars, wi) => (
+              <span class="atitle__word">
+                {chars.map((ch) => (
+                  <span class="atitle__wrap">
+                    <span class="atitle__char" aria-hidden="true">
+                      {ch}
+                    </span>
+                  </span>
+                ))}
+                {wi < titleWords.length - 1 && <span class="atitle__space"> </span>}
+              </span>
+            ))
+          }
+        </h1>
+
+        <p class="article__deck" data-reveal-fade>{blurb}</p>
+      </header>
+
+      <figure class="article__hero" data-reveal-fade>
+        <div class="article__hero-frame">
+          <img
+            class="article__hero-img"
+            src={cover.src}
+            width={cover.width}
+            height={cover.height}
+            alt=""
+            data-hero
+            fetchpriority="high"
+          />
+        </div>
+      </figure>
+
+      <div class="article__grid">
+        <div class="article__body article-prose" data-prose>
+          <Content />
+        </div>
+        <aside class="article__aside">
+          <ArticleToc headings={headings} />
+        </aside>
+      </div>
+    </article>
+
+    <ArticleNav prev={prev} next={next} />
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  import { initArticle } from "../../scripts/lab/article";
+  initArticle();
+</script>
+
+<style>
+  /* ── scroll progress (gold bar under the header) ─────────── */
+  .reading-progress {
+    position: fixed;
+    top: var(--header-h);
+    left: 0;
+    height: 4px;
+    width: 100%;
+    background: var(--c-gold);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    z-index: calc(var(--z-header) - 1);
+    pointer-events: none;
+  }
+
+  .article {
+    position: relative;
+    z-index: 1;
+    padding: calc(var(--header-h) + clamp(2rem, 5vh, 4rem)) var(--gutter)
+      clamp(4rem, 10vh, 8rem);
+  }
+
+  /* ── header ──────────────────────────────────────────────── */
+  .article__head {
+    max-width: 900px;
+    margin: 0 auto clamp(2rem, 5vh, 3.5rem);
+  }
+  .article__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.78rem;
+    color: var(--c-gold);
+    margin-bottom: clamp(1.4rem, 4vh, 2.4rem);
+    transition: gap 0.2s ease;
+  }
+  .article__back:hover {
+    gap: 0.85rem;
+  }
+
+  .article__eyebrow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: clamp(1rem, 2.5vh, 1.6rem);
+  }
+  .article__no {
+    color: var(--c-gold);
+    font-weight: 700;
+  }
+  .article__dot {
+    color: var(--c-gold);
+    font-size: 0.5rem;
+  }
+  .article__tags {
+    display: inline-flex;
+    gap: 0.35rem;
+  }
+  .article__tag {
+    color: var(--c-black);
+    background: var(--accent);
+    padding: 0.2em 0.6em;
+    font-weight: 700;
+  }
+
+  .article__title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    text-transform: uppercase;
+    line-height: 0.92;
+    letter-spacing: 0.004em;
+    font-size: clamp(2.6rem, 6.5vw, 5.4rem);
+    color: var(--c-white);
+  }
+  .atitle__word {
+    display: inline-flex;
+  }
+  .atitle__wrap {
+    display: inline-block;
+    overflow: hidden;
+    padding-bottom: 0.06em;
+  }
+  .atitle__char {
+    display: inline-block;
+    will-change: transform;
+  }
+  .atitle__space {
+    display: inline-block;
+    width: 0.26em;
+  }
+
+  .article__deck {
+    max-width: 46ch;
+    margin-top: clamp(1.2rem, 3vh, 2rem);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: clamp(1.15rem, 1.8vw, 1.5rem);
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  /* ── hero cover ──────────────────────────────────────────── */
+  .article__hero {
+    max-width: 1180px;
+    margin: 0 auto clamp(2.5rem, 6vh, 4.5rem);
+  }
+  .article__hero-frame {
+    position: relative;
+    overflow: hidden;
+    border: var(--bw) solid var(--c-black);
+    box-shadow: 10px 10px 0 0 var(--c-black);
+    aspect-ratio: 21 / 9;
+    background: #0a1030;
+  }
+  .article__hero-img {
+    width: 100%;
+    height: 116%; /* headroom for the parallax drift */
+    object-fit: cover;
+    will-change: transform;
+  }
+
+  /* ── body + toc grid ─────────────────────────────────────── */
+  .article__grid {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 720px) 210px;
+    justify-content: center;
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+  }
+  .article__body {
+    min-width: 0;
+  }
+  /* stretch the TOC column to the full article height so its sticky child has
+     room to travel — otherwise the cell is only as tall as the TOC and it
+     scrolls away with the page. */
+  .article__aside {
+    align-self: stretch;
+    min-width: 0;
+  }
+
+  @media (max-width: 1080px) {
+    .article__grid {
+      grid-template-columns: min(720px, 100%);
+      justify-content: center;
+    }
+    .article__aside {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .article__back,
+    .article__hero-img {
+      transition: none;
+    }
+  }
+</style>
+
+<!-- ── reading prose: scoped to .article-prose, global so it reaches the
+     markdown-rendered children (Content) ─────────────────────────────── -->
+<style is:global>
+  .article-prose {
+    background: #111a4d; /* deepened brand blue — a calm, high-contrast reading slab */
+    border: var(--bw) solid var(--c-black);
+    box-shadow: 10px 10px 0 0 rgba(0, 0, 0, 0.55);
+    padding: clamp(1.5rem, 4vw, 3.4rem);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: clamp(1.06rem, 1.35vw, 1.2rem);
+    line-height: 1.75;
+    color: #e9ecff;
+  }
+
+  .article-prose > * + * {
+    margin-top: 1.35em;
+  }
+  .article-prose p {
+    color: #dfe3ff;
+  }
+
+  /* drop-cap on the opening paragraph */
+  .article-prose > p:first-of-type::first-letter {
+    font-family: var(--font-display);
+    float: left;
+    font-size: 3.6em;
+    line-height: 0.72;
+    padding: 0.06em 0.1em 0 0;
+    margin-right: 0.02em;
+    color: var(--c-gold);
+  }
+
+  .article-prose h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    line-height: 1.02;
+    font-size: clamp(1.7rem, 3.2vw, 2.5rem);
+    color: #fff;
+    margin-top: 2em;
+    padding-top: 0.7em;
+    border-top: var(--bw) solid rgba(255, 255, 255, 0.16);
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+  }
+  .article-prose h3 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: clamp(1.1rem, 1.6vw, 1.3rem);
+    color: var(--c-gold);
+    margin-top: 1.8em;
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+  }
+
+  .article-prose a {
+    color: var(--c-gold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+    transition:
+      background 0.18s ease,
+      color 0.18s ease;
+  }
+  .article-prose a:hover {
+    background: var(--c-gold);
+    color: var(--c-black);
+    text-decoration-color: transparent;
+  }
+
+  .article-prose strong {
+    color: #fff;
+    font-weight: 700;
+  }
+  .article-prose em {
+    font-style: italic;
+    color: #fff;
+  }
+
+  /* pull-quote: gold bar, large, calm */
+  .article-prose blockquote {
+    margin: 1.9em 0;
+    padding: 0.2em 0 0.2em 1.3rem;
+    border-left: 5px solid var(--c-gold);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+    line-height: 1.32;
+    color: #fff;
+  }
+  .article-prose blockquote p {
+    color: #fff;
+  }
+
+  /* lists */
+  .article-prose ul,
+  .article-prose ol {
+    padding-left: 1.4em;
+  }
+  .article-prose ul {
+    list-style: none;
+  }
+  .article-prose ul > li {
+    position: relative;
+    padding-left: 1.2em;
+  }
+  .article-prose ul > li::before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    color: var(--c-gold);
+  }
+  .article-prose ol {
+    list-style: decimal;
+  }
+  .article-prose ol > li::marker {
+    color: var(--c-gold);
+    font-weight: 700;
+  }
+  .article-prose li + li {
+    margin-top: 0.5em;
+  }
+  .article-prose li::marker {
+    color: var(--c-gold);
+  }
+
+  /* inline code */
+  .article-prose :not(pre) > code {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.86em;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffd27d;
+    padding: 0.12em 0.4em;
+    border-radius: 3px;
+  }
+
+  /* code block: dark navy slab, wrapped by the script for the label + copy */
+  .article-prose .code-wrap {
+    margin: 1.9em 0;
+    border: var(--bw) solid var(--c-black);
+    background: #0b1030;
+  }
+  .article-prose .code-wrap__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.9rem;
+    background: #060a24;
+    border-bottom: var(--bw) solid rgba(255, 255, 255, 0.1);
+    font-family: var(--font-sans);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+  .article-prose .code-wrap__lang {
+    color: var(--c-gold);
+  }
+  .article-prose .code-wrap__copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.14em;
+    transition: color 0.18s ease;
+  }
+  .article-prose .code-wrap__copy:hover {
+    color: var(--c-gold);
+  }
+  .article-prose .code-wrap__copy[data-copied] {
+    color: #4ade80;
+  }
+  .article-prose pre {
+    margin: 0;
+    padding: clamp(1rem, 2vw, 1.4rem);
+    overflow-x: auto;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    background: #0b1030 !important; /* override the Shiki theme bg for cohesion */
+  }
+  .article-prose pre code {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  /* a bare code block that hasn't been wrapped yet (no-JS) still reads well */
+  .article-prose > pre {
+    border: var(--bw) solid var(--c-black);
+  }
+
+  /* figures / images */
+  .article-prose img {
+    width: 100%;
+    border: var(--bw) solid var(--c-black);
+    margin: 1.9em 0 0.6em;
+  }
+  .article-prose figure {
+    margin: 1.9em 0;
+  }
+  .article-prose figcaption,
+  .article-prose img + em {
+    display: block;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.55);
+    text-align: center;
+  }
+
+  .article-prose hr {
+    border: none;
+    border-top: var(--bw) solid rgba(255, 255, 255, 0.16);
+    margin: 2.2em 0;
+  }
+
+  .article-prose ::selection {
+    background: var(--c-gold);
+    color: var(--c-black);
+  }
+</style>

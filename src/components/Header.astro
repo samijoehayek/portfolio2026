@@ -1,23 +1,30 @@
 ---
 import Logo from "./Logo.astro";
 
+// Section links are in-page anchors on the home page, but must jump back home
+// first from any sub-page (e.g. /lab). LAB is now a real route.
+const path = Astro.url.pathname;
+const onHome = path === "/";
+const isLab = path === "/lab" || path.startsWith("/lab/");
+const sec = (hash: string) => (onHome ? hash : `/${hash}`);
+
 // nav links — label + href + the word it swaps to on hover
 const links = [
-  { label: "WORK", href: "#work", alt: "WORK" },
-  { label: "SERVICES", href: "#services", alt: "SERVICES" },
-  { label: "ABOUT", href: "#about", alt: "ABOUT", mobileHide: true },
-  { label: "CONTACT", href: "#contact", alt: "CONTACT" },
-  { label: "LAB", href: "#lab", alt: "LAB", lab: true },
+  { label: "WORK", href: sec("#work"), alt: "WORK" },
+  { label: "SERVICES", href: sec("#services"), alt: "SERVICES" },
+  { label: "ABOUT", href: sec("#about"), alt: "ABOUT", mobileHide: true },
+  { label: "CONTACT", href: sec("#contact"), alt: "CONTACT" },
+  { label: "LAB", href: "/lab", alt: "LAB", lab: true, active: isLab },
 ];
 
-const cta = { label: "LET'S TALK", alt: "FUN STUFF", href: "#contact" };
+const cta = { label: "LET'S TALK", alt: "FUN STUFF", href: sec("#contact") };
 
 // split a string into an array of chars, preserving spaces as non-breaking
 const chars = (s: string) => [...s].map((c) => (c === " " ? " " : c));
 ---
 
 <header class="site-header" data-header>
-  <a class="logo-link" href="#top" aria-label="Home">
+  <a class="logo-link" href={onHome ? "#top" : "/"} aria-label="Home">
     <Logo size={44} />
   </a>
 
@@ -25,10 +32,11 @@ const chars = (s: string) => [...s].map((c) => (c === " " ? " " : c));
     {
       links.map((link) => (
         <a
-          class={`site-header-nav-link${link.mobileHide ? " is-desktop-only" : ""}`}
+          class={`site-header-nav-link${link.mobileHide ? " is-desktop-only" : ""}${link.active ? " is-active" : ""}`}
           href={link.href}
           data-nav-link
           data-lab-nav-link={link.lab ? "" : undefined}
+          aria-current={link.active ? "page" : undefined}
         >
           <span class="menu-text menu-text-1" aria-hidden="true">
             {chars(link.label).map((ch) => (
@@ -123,6 +131,17 @@ const chars = (s: string) => [...s].map((c) => (c === " " ? " " : c));
     letter-spacing: 0.02em;
     line-height: 1;
     overflow: hidden;
+  }
+
+  /* active route (currently only LAB): a persistent gold underline */
+  .site-header-nav-link.is-active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.1em;
+    height: var(--bw);
+    background: var(--c-gold);
   }
 
   .menu-text {

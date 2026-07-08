@@ -1,0 +1,285 @@
+---
+// The Lab index — editorial masthead + filterable article grid.
+// Bulletproof base: this renders as a plain, accessible list of <a> cards with
+// zero JS. src/scripts/lab/index.ts layers on the masthead reveal, scroll
+// reveals, magnetic hover, the featured WebGL shatter, and FLIP tag filtering.
+import ArticleCard from "./ArticleCard.astro";
+import type { LabEntry } from "../../data/lab";
+import { LAB_COPY, collectTags, pad } from "../../data/lab";
+
+interface Props {
+  entries: LabEntry[]; // pre-sorted newest-first, drafts already removed
+}
+
+const { entries } = Astro.props;
+
+// Featured = the flagged one, else the newest. The rest keep date order.
+const featured = entries.find((e) => e.data.featured) ?? entries[0];
+const rest = entries.filter((e) => e !== featured);
+const ordered = featured ? [featured, ...rest] : entries;
+
+const tags = collectTags(entries);
+const count = entries.length;
+
+// split "THE LAB" into words → chars for the masked masthead reveal
+const words = LAB_COPY.kicker.split(" ").map((w) => [...w]);
+---
+
+<section class="lab" data-lab aria-labelledby="lab-title">
+  <header class="lab__masthead">
+    <p class="lab__eyebrow" data-reveal-fade>
+      <span class="lab__eyebrow-mark">◆</span>
+      Field notes — Nº {pad(count)}
+    </p>
+
+    <h1 class="lab__title" id="lab-title" data-title aria-label={LAB_COPY.kicker}>
+      {
+        words.map((chars, wi) => (
+          <span class="lab__word">
+            {chars.map((ch) => (
+              <span class="lab__char-wrap">
+                <span class="lab__char" aria-hidden="true">
+                  {ch}
+                </span>
+              </span>
+            ))}
+            {wi < words.length - 1 && <span class="lab__space"> </span>}
+          </span>
+        ))
+      }
+    </h1>
+
+    <p class="lab__deck" data-reveal-fade>{LAB_COPY.deck}</p>
+
+    <div class="lab__bar">
+      <span class="lab__count" data-count aria-hidden="true">
+        <span class="lab__count-num" data-count-num data-target={count}>{pad(count)}</span>
+        <span class="lab__count-label">{count === 1 ? "entry" : "entries"}</span>
+      </span>
+
+      <div class="lab__filters" data-filters role="tablist" aria-label="Filter articles by tag">
+        <button class="lab__chip is-active" data-filter="ALL" role="tab" aria-selected="true">
+          All
+        </button>
+        {
+          tags.map((t) => (
+            <button class="lab__chip" data-filter={t} role="tab" aria-selected="false">
+              {t}
+            </button>
+          ))
+        }
+      </div>
+    </div>
+  </header>
+
+  <div class="lab__grid" data-lab-grid>
+    {
+      ordered.map((entry, i) => (
+        <div
+          class:list={["lab__cell", { "lab__cell--featured": entry === featured }]}
+          data-cell
+          data-reveal
+        >
+          <ArticleCard entry={entry} index={i + 1} featured={entry === featured} />
+        </div>
+      ))
+    }
+    <p class="lab__empty" data-empty hidden>No entries under that tag — yet.</p>
+  </div>
+</section>
+
+<style>
+  .lab {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    padding: calc(var(--header-h) + clamp(2.5rem, 7vh, 6rem)) var(--gutter)
+      clamp(4rem, 10vh, 8rem);
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+
+  /* ── masthead ──────────────────────────────────────────── */
+  .lab__masthead {
+    margin-bottom: clamp(2.5rem, 6vh, 5rem);
+  }
+
+  .lab__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: clamp(0.7rem, 1vw, 0.82rem);
+    color: var(--c-gold);
+    margin-bottom: clamp(0.8rem, 2vh, 1.4rem);
+  }
+  .lab__eyebrow-mark {
+    font-size: 0.6em;
+  }
+
+  .lab__title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    text-transform: uppercase;
+    line-height: 0.82;
+    letter-spacing: 0.006em;
+    font-size: clamp(3.4rem, 17vw, 16rem);
+    color: var(--c-white);
+    margin: 0;
+  }
+  .lab__word {
+    display: inline-flex;
+  }
+  .lab__char-wrap {
+    display: inline-block;
+    overflow: hidden;
+    /* Anton sits high in its box — nudge glyphs down so descenders aren't clipped */
+    padding-bottom: 0.08em;
+  }
+  .lab__char {
+    display: inline-block;
+    will-change: transform;
+  }
+  .lab__space {
+    display: inline-block;
+    width: 0.28em;
+  }
+
+  .lab__deck {
+    max-width: 34ch;
+    margin-top: clamp(1rem, 2.5vh, 1.8rem);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: clamp(1.05rem, 1.7vw, 1.45rem);
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  /* ── meta bar: counter + filter chips ──────────────────── */
+  .lab__bar {
+    margin-top: clamp(1.8rem, 4vh, 3rem);
+    padding-top: 1.3rem;
+    border-top: var(--bw) solid var(--c-black);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+  }
+
+  .lab__count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .lab__count-num {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    line-height: 1;
+    color: var(--c-gold);
+  }
+  .lab__count-label {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.74rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .lab__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .lab__chip {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.74rem;
+    color: var(--c-white);
+    background: transparent;
+    border: var(--bw) solid var(--c-black);
+    padding: 0.5em 1.05em;
+    cursor: pointer;
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
+  }
+  .lab__chip:hover {
+    border-color: var(--c-gold);
+    color: var(--c-gold);
+  }
+  .lab__chip.is-active {
+    background: var(--c-gold);
+    border-color: var(--c-gold);
+    color: var(--c-black);
+  }
+  .lab__chip:focus-visible {
+    outline: var(--bw) solid var(--c-gold);
+    outline-offset: 2px;
+  }
+
+  /* ── grid ──────────────────────────────────────────────── */
+  .lab__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1.4rem, 3vw, 2.6rem);
+  }
+  .lab__cell {
+    display: flex;
+  }
+  .lab__cell > :global(.acard) {
+    width: 100%;
+  }
+  /* featured cell spans the full row */
+  .lab__cell--featured {
+    grid-column: 1 / -1;
+  }
+  /* a cell filtered out by the tag chips */
+  .lab__cell[hidden] {
+    display: none;
+  }
+
+  .lab__empty {
+    grid-column: 1 / -1;
+    padding: 3rem 0;
+    text-align: center;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  @media (max-width: 720px) {
+    .lab__grid {
+      grid-template-columns: 1fr;
+    }
+    .lab__bar {
+      flex-direction: column-reverse;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    /* let the chip row scroll sideways instead of stacking into many rows */
+    .lab__filters {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      max-width: 100%;
+      padding-bottom: 0.4rem;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .lab__filters::-webkit-scrollbar {
+      display: none;
+    }
+    .lab__chip {
+      flex: 0 0 auto;
+    }
+  }
+</style>

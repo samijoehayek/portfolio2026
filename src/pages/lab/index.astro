@@ -1,0 +1,26 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import LabIndex from "../../components/lab/LabIndex.astro";
+import { sortByDate } from "../../data/lab";
+
+const entries = (await getCollection("lab", ({ data }) => !data.draft)).sort(sortByDate);
+---
+
+<Layout
+  title="The Lab — Samijoe Hayek"
+  description="Field notes from the build — blockchain, systems, and the craft in between. Writing on Bitcoin, Ethereum, Rust, and the engineering behind them."
+>
+  <Header />
+  <main id="top">
+    <LabIndex entries={entries} />
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  import { initLab } from "../../scripts/lab/index";
+  initLab();
+</script>

@@ -1,0 +1,321 @@
+---
+// One Lab article card. Two variants:
+//  - standard: framed cover + meta + title + blurb, in the asymmetric grid.
+//  - featured: large 2-up hero card; its cover gets the pixelDistortion WebGL
+//    hover (canvas overlaid on the static <Image> fallback).
+// Neo-brutalist chrome: 3px black frame, hard offset shadow, gold accents,
+// per-card --accent. Motion is added by src/scripts/lab/index.ts (progressive
+// enhancement — the bare <a> is a fully working link with no JS).
+import { Image, getImage } from "astro:assets";
+import type { LabEntry } from "../../data/lab";
+import { pad, shortDate, readingMinutes } from "../../data/lab";
+
+interface Props {
+  entry: LabEntry;
+  index: number; // 1-based position for the corner numeral
+  featured?: boolean;
+}
+
+const { entry, index, featured = false } = Astro.props;
+const { title, blurb, date, tags, cover, coverDepth, accent } = entry.data;
+const href = `/lab/${entry.id}`;
+const mins = readingMinutes(entry.body, entry.data.readingTime);
+const tagAttr = tags.map((t) => t.toUpperCase()).join(",");
+
+// Every card's cover can run the pixel-shatter shader on hover, so hand each one
+// a plain optimized URL (plus a depth map, if the article supplies one) via
+// data-* attributes for src/scripts/lab/index.ts to pick up.
+const shaderW = featured ? 1400 : 900;
+const coverURL = (await getImage({ src: cover, width: shaderW, format: "webp" })).src;
+const depthURL = coverDepth
+  ? (await getImage({ src: coverDepth, width: shaderW, format: "webp" })).src
+  : undefined;
+---
+
+<a
+  class:list={["acard", { "acard--featured": featured }]}
+  href={href}
+  data-acard
+  data-accent={accent}
+  data-tags={tagAttr}
+  data-cover={coverURL}
+  data-depth={depthURL}
+  style={`--accent:${accent}`}
+>
+  <div class="acard__media">
+    <div class="acard__frame">
+      <Image
+        class="acard__img"
+        src={cover}
+        alt=""
+        widths={featured ? [640, 960, 1400] : [400, 640, 800]}
+        sizes={featured ? "(max-width: 900px) 100vw, 60vw" : "(max-width: 640px) 90vw, 30vw"}
+        loading={featured || index <= 3 ? "eager" : "lazy"}
+      />
+      <canvas class="acard__canvas" data-canvas aria-hidden="true"></canvas>
+      <span class="acard__num" aria-hidden="true">{pad(index)}</span>
+      {featured && <span class="acard__badge">Featured</span>}
+    </div>
+  </div>
+
+  <div class="acard__body">
+    <div class="acard__meta">
+      <ul class="acard__tags" role="list">
+        {tags.map((t) => <li class="acard__tag">{t}</li>)}
+      </ul>
+      <span class="acard__dot" aria-hidden="true">◆</span>
+      <span class="acard__date">{shortDate(date)}</span>
+      <span class="acard__dot" aria-hidden="true">◆</span>
+      <span class="acard__mins">{mins} min</span>
+    </div>
+
+    <h3 class="acard__title">{title}</h3>
+    <p class="acard__blurb">{blurb}</p>
+
+    <span class="acard__read">
+      Read the entry
+      <span class="acard__arrow" aria-hidden="true">→</span>
+    </span>
+  </div>
+</a>
+
+<style>
+  .acard {
+    --shadow: 8px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.16);
+    border: var(--bw) solid var(--c-black);
+    box-shadow: var(--shadow) var(--shadow) 0 0 var(--c-black);
+    color: var(--c-white);
+    isolation: isolate;
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.35s ease;
+    /* the JS reveal starts cards hidden; without JS they must show anyway */
+    will-change: transform;
+  }
+
+  .acard:hover,
+  .acard:focus-visible {
+    transform: translate(-4px, -4px);
+    box-shadow: calc(var(--shadow) + 6px) calc(var(--shadow) + 6px) 0 0 var(--accent);
+    border-color: var(--accent);
+    outline: none;
+  }
+
+  /* ── media / cover ─────────────────────────────────────── */
+  .acard__media {
+    padding: var(--bw);
+    padding-bottom: 0;
+  }
+  .acard__frame {
+    position: relative;
+    overflow: hidden;
+    border: var(--bw) solid var(--c-black);
+    aspect-ratio: 3 / 2;
+    background: #0a1030;
+  }
+  .acard--featured .acard__frame {
+    aspect-ratio: 16 / 10;
+  }
+  .acard__img,
+  .acard__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .acard__img {
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  /* the canvas fades in only once the shader has booted (data-shader-on) */
+  .acard__canvas {
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+  .acard[data-shader-on] .acard__canvas {
+    opacity: 1;
+  }
+  .acard[data-shader-on] .acard__img {
+    visibility: hidden;
+  }
+  /* gentle zoom on hover for the non-shader (standard) cards */
+  .acard:not(.acard--featured):hover .acard__img {
+    transform: scale(1.05);
+  }
+
+  .acard__num {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3.4vw, 2.6rem);
+    line-height: 1;
+    color: var(--c-white);
+    background: var(--c-black);
+    padding: 0.18em 0.42em 0.12em;
+    letter-spacing: 0.02em;
+  }
+  .acard:hover .acard__num {
+    color: var(--accent);
+  }
+
+  .acard__badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.68rem;
+    color: var(--c-black);
+    background: var(--c-gold);
+    padding: 0.5em 0.9em;
+  }
+
+  /* ── body ──────────────────────────────────────────────── */
+  .acard__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding: clamp(1rem, 2vw, 1.5rem);
+    flex: 1;
+  }
+  .acard--featured .acard__body {
+    gap: 1rem;
+    padding: clamp(1.4rem, 2.4vw, 2.2rem);
+  }
+
+  .acard__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.62);
+  }
+  .acard__tags {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .acard__tag {
+    color: var(--c-black);
+    background: var(--accent);
+    padding: 0.22em 0.6em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .acard__dot {
+    color: var(--c-gold);
+    font-size: 0.5rem;
+  }
+
+  .acard__title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 0.98;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    color: var(--c-white);
+    /* gold underline wipe on hover */
+    background-image: linear-gradient(var(--c-gold), var(--c-gold));
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% var(--bw);
+    padding-bottom: 0.12em;
+    transition: background-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .acard--featured .acard__title {
+    font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+  }
+  .acard:hover .acard__title,
+  .acard:focus-visible .acard__title {
+    background-size: 100% var(--bw);
+  }
+
+  .acard__blurb {
+    font-family: var(--font-sans);
+    font-size: clamp(0.9rem, 1.1vw, 1rem);
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.78);
+    max-width: 62ch;
+  }
+  .acard--featured .acard__blurb {
+    font-size: clamp(1rem, 1.4vw, 1.18rem);
+  }
+
+  .acard__read {
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-gold);
+  }
+  .acard__arrow {
+    display: inline-block;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .acard:hover .acard__arrow {
+    transform: translateX(6px);
+  }
+
+  /* ── featured: 2-up on wide screens ────────────────────── */
+  @media (min-width: 901px) {
+    .acard--featured {
+      grid-column: 1 / -1;
+      flex-direction: row;
+    }
+    .acard--featured .acard__media {
+      flex: 1 1 58%;
+      padding: var(--bw);
+      padding-right: 0;
+    }
+    .acard--featured .acard__frame {
+      height: 100%;
+      aspect-ratio: auto;
+    }
+    .acard--featured .acard__body {
+      flex: 1 1 42%;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 720px) {
+    /* a lighter offset shadow so a full-width card never crowds the 8px frame */
+    .acard {
+      --shadow: 5px;
+    }
+    .acard:hover,
+    .acard:focus-visible {
+      transform: translate(-2px, -2px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .acard,
+    .acard__img,
+    .acard__title,
+    .acard__arrow {
+      transition: none;
+    }
+  }
+</style>
