@@ -75,6 +75,34 @@ ol {
   border: var(--frame-w) solid var(--c-black);
 }
 
+/* ── page transitions ─────────────────────────────────────────────────────
+   Native CROSS-DOCUMENT View Transitions (MPA) — not the SPA ClientRouter.
+   Every navigation is still a real page load, so all island scripts re-run and
+   no WebGL/Rive state persists. Unsupported browsers just navigate normally. */
+@view-transition {
+  navigation: auto;
+}
+
+/* Persistent chrome keeps a stable name so it stays rock-steady (doesn't
+   cross-fade) while the page morphs underneath it. */
+.site-header {
+  view-transition-name: site-header;
+}
+.site-frame {
+  view-transition-name: site-frame;
+}
+
+/* default cross-fade timing for every transition group … */
+::view-transition-group(*) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.6, 0.05, 0.1, 1);
+}
+/* … a touch quicker for the whole-page root fade */
+::view-transition-group(root) {
+  animation-duration: 0.42s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -83,5 +111,12 @@ ol {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* no morph/slide for reduced-motion users — an instant swap */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

@@ -74,16 +74,11 @@ function initReveals(root: HTMLElement): void {
   const cells = gsap.utils.toArray<HTMLElement>(root.querySelectorAll("[data-reveal]"));
   if (!cells.length) return;
 
-  gsap.set(cells, { autoAlpha: 0, y: 46 });
-
-  const reveal = (el: HTMLElement) =>
-    gsap.to(el, { autoAlpha: 1, y: 0, duration: 0.8, ease: EASE });
-
   const io = new IntersectionObserver(
     (entries) => {
       for (const e of entries) {
         if (e.isIntersecting) {
-          reveal(e.target as HTMLElement);
+          gsap.to(e.target, { autoAlpha: 1, y: 0, duration: 0.8, ease: EASE });
           io.unobserve(e.target);
         }
       }
@@ -91,16 +86,14 @@ function initReveals(root: HTMLElement): void {
     { threshold: 0.14, rootMargin: "0px 0px -8% 0px" },
   );
 
-  // Cards already in view on load animate immediately with a stagger; the rest
-  // wait for the observer.
+  // Only cards BELOW the fold get hidden + revealed on scroll. Cards already in
+  // view stay visible from the first frame — no load delay, and (crucially) they
+  // are never invisible at a View-Transition snapshot, so the cover→hero morph
+  // always has something to animate to/from.
   const vh = window.innerHeight;
-  let inView = 0;
   cells.forEach((cell) => {
-    const r = cell.getBoundingClientRect();
-    if (r.top < vh * 0.92) {
-      gsap.to(cell, { autoAlpha: 1, y: 0, duration: 0.85, ease: EASE, delay: 0.35 + inView * 0.12 });
-      inView++;
-    } else {
+    if (cell.getBoundingClientRect().top >= vh * 0.9) {
+      gsap.set(cell, { autoAlpha: 0, y: 46 });
       io.observe(cell);
     }
   });

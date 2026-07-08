@@ -10,6 +10,8 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.3",
     "@rive-app/canvas": "^2.38.3",
     "@types/three": "^0.184.1",
     "astro": "^6.4.6",

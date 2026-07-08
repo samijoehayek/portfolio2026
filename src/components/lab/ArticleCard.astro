@@ -43,7 +43,7 @@ const depthURL = coverDepth
   style={`--accent:${accent}`}
 >
   <div class="acard__media">
-    <div class="acard__frame">
+    <div class="acard__frame" style={`view-transition-name: cover-${entry.id}`}>
       <Image
         class="acard__img"
         src={cover}

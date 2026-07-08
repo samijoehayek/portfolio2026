@@ -5,16 +5,21 @@ import "../styles/global.css";
 interface Props {
   title?: string;
   description?: string;
+  ogImage?: string; // absolute URL or root-relative path (e.g. /lab/og/x.png)
+  ogType?: string; // "website" | "article"
 }
 
 const {
   title = "Samijoe Hayek — Full-stack engineer",
   description =
     "Samijoe Hayek — full-stack engineer building products end to end: blockchain, back-end, and the interfaces that tie them together.",
+  ogImage = "/og-image.png",
+  ogType = "website",
 } = Astro.props;
 
-const SITE = "https://samijoehayek.com";
-const ogImage = `${SITE}/og-image.png`;
+const SITE = Astro.site ?? new URL("https://samijoehayek.com");
+const canonical = new URL(Astro.url.pathname, SITE);
+const ogImageURL = new URL(ogImage, SITE);
 ---
 
 <!doctype html>
@@ -32,17 +37,21 @@ const ogImage = `${SITE}/og-image.png`;
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#2b47ff" />
+    <link rel="alternate" type="application/rss+xml" title="The Lab" href="/lab/rss.xml" />
+
+    <link rel="canonical" href={canonical} />
 
     <!-- Open Graph / social -->
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={ogImage} />
-    <meta property="og:url" content={`${SITE}/`} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="Samijoe Hayek" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image" content={ogImageURL} />
 
     <!-- Free stand-in fonts (swap for licensed faces later) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -51,6 +60,9 @@ const ogImage = `${SITE}/og-image.png`;
       href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
+
+    <!-- per-page extras: article meta, JSON-LD structured data, etc. -->
+    <slot name="head" />
   </head>
   <body>
     <div class="site-frame" aria-hidden="true"></div>
