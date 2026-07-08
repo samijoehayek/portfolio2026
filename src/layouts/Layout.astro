@@ -1,6 +1,7 @@
 ---
 import "../styles/tokens.css";
 import "../styles/global.css";
+import PageTransition from "../components/PageTransition.astro";
 
 interface Props {
   title?: string;
@@ -30,6 +31,26 @@ const ogImageURL = new URL(ogImage, SITE);
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+
+    <script is:inline>
+      // page-transition (SAM-16): if we arrived via a bar-wipe navigation, cover
+      // before first paint (no flash) and skip the native View Transition so the
+      // bars own the moment.
+      (function () {
+        try {
+          var v = sessionStorage.getItem("pt-nav");
+          if (v === "h") document.documentElement.classList.add("pt-cover-h");
+          else if (v === "v") document.documentElement.classList.add("pt-cover-v");
+        } catch (e) {}
+        var skip = function (e) {
+          try {
+            if (sessionStorage.getItem("pt-nav") && e.viewTransition) e.viewTransition.skipTransition();
+          } catch (_) {}
+        };
+        addEventListener("pageswap", skip);
+        addEventListener("pagereveal", skip);
+      })();
+    </script>
 
     <!-- Favicons / PWA -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -66,6 +87,7 @@ const ogImageURL = new URL(ogImage, SITE);
   </head>
   <body>
     <div class="site-frame" aria-hidden="true"></div>
+    <PageTransition />
     <slot />
 
     <script>

@@ -103,6 +103,72 @@ ol {
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ── page-transition curtain (SAM-16) ─────────────────────────────────────
+   Thick horizontal bars, page-blue → darker navy, that wipe in from the right
+   (chained top→bottom) to cover everything BELOW the navbar, then retract to
+   reveal the destination. Fires only on non-home → home-section navigations
+   (controller in src/components/PageTransition.astro). z sits under the header
+   + frame so the navbar is never covered. */
+.page-transition {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: calc(var(--z-header) - 1);
+  visibility: hidden;
+  pointer-events: none;
+  view-transition-name: none; /* never captured by a native View Transition */
+}
+/* two stacked layers; only the active variant's bars are ever scaled up */
+.pt-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+.pt-layer--h {
+  flex-direction: column;
+} /* 12 horizontal bars stacked */
+.pt-layer--v {
+  flex-direction: row;
+} /* 6 vertical bars side-by-side */
+.pt-bar {
+  flex: 1 1 0;
+  will-change: transform;
+}
+/* horizontal: full-width bars, wipe along X; emboss on top/bottom edges */
+.pt-bar--h {
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: right center;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.14);
+}
+/* vertical: full-height bars, wipe along Y; emboss on left/right edges */
+.pt-bar--v {
+  height: 100%;
+  transform: scaleY(0);
+  transform-origin: center bottom;
+  box-shadow:
+    inset 2px 0 0 rgba(255, 255, 255, 0.05),
+    inset -4px 0 8px rgba(0, 0, 0, 0.14);
+}
+/* no-flash: a bar-wipe navigation arrives already covered (set before paint by
+   the inline head script), then the controller retracts the bars */
+html.pt-cover-h .page-transition,
+html.pt-cover-v .page-transition {
+  visibility: visible;
+}
+html.pt-cover-h .pt-bar--h {
+  transform: scaleX(1);
+  transform-origin: right center;
+}
+html.pt-cover-v .pt-bar--v {
+  transform: scaleY(1);
+  transform-origin: center bottom;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -118,5 +184,10 @@ ol {
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation: none !important;
+  }
+
+  /* the bar-wipe never runs for reduced-motion users (controller also skips) */
+  .page-transition {
+    display: none !important;
   }
 }

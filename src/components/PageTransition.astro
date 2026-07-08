@@ -1,0 +1,125 @@
+---
+// Page-transition curtain (SAM-16) — two variants that share one design system:
+//   • "h" — 12 THICK HORIZONTAL bars, wipe in from the right, chained top→bottom.
+//           Fires when leaving a non-home page toward a home nav-section.
+//   • "v" — 6 THICK VERTICAL bars, wipe in from the bottom (down→up), chained
+//           left→right. Fires when going from the home page to /lab.
+// Both ramp from the page blue to a darker navy, cover only BELOW the navbar,
+// and suppress the 13-C native View Transitions for their own navigations (the
+// Lab index↔article morph is left alone). Controller + handoff below.
+const TOP = [43, 71, 255]; // #2b47ff — the page background blue
+const BOTTOM = [13, 18, 64]; // #0d1240 — a gently darker navy
+const ramp = (n: number) =>
+  Array.from({ length: n }, (_, i) => {
+    const t = i / (n - 1);
+    const ch = (a: number, b: number) => Math.round(a + (b - a) * t);
+    return `rgb(${ch(TOP[0], BOTTOM[0])}, ${ch(TOP[1], BOTTOM[1])}, ${ch(TOP[2], BOTTOM[2])})`;
+  });
+
+const hBars = ramp(12);
+const vBars = ramp(6);
+---
+
+<div class="page-transition" data-transition aria-hidden="true">
+  <div class="pt-layer pt-layer--h">
+    {hBars.map((c) => <div class="pt-bar pt-bar--h" style={`background:${c}`} />)}
+  </div>
+  <div class="pt-layer pt-layer--v">
+    {vBars.map((c) => <div class="pt-bar pt-bar--v" style={`background:${c}`} />)}
+  </div>
+</div>
+
+<script>
+  import { gsap } from "gsap";
+
+  const KEY = "pt-nav";
+  const overlay = document.querySelector<HTMLElement>("[data-transition]");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (overlay && !reduce) {
+    const bars = {
+      h: gsap.utils.toArray<HTMLElement>(".pt-bar--h"),
+      v: gsap.utils.toArray<HTMLElement>(".pt-bar--v"),
+    };
+    const getLenis = () => (window as unknown as { lenis?: { stop(): void; start(): void } }).lenis;
+    const show = () => (overlay.style.visibility = "visible");
+    const hide = () => (overlay.style.visibility = "hidden");
+
+    // Shared timing so both variants "appear the same way".
+    const IN = { duration: 0.42, stagger: 0.04, ease: "power2.inOut" };
+    const OUT = { duration: 0.4, stagger: 0.035, ease: "power2.inOut" };
+
+    // COVER — bars grow along their length, chained. h: from the right; v: from
+    // the bottom (down→up).
+    function cover(variant: "h" | "v") {
+      show();
+      getLenis()?.stop();
+      const b = bars[variant];
+      if (variant === "h") {
+        gsap.set(b, { transformOrigin: "right center", scaleX: 0, scaleY: 1 });
+        return gsap.to(b, { scaleX: 1, ...IN });
+      }
+      gsap.set(b, { transformOrigin: "center bottom", scaleY: 0, scaleX: 1 });
+      return gsap.to(b, { scaleY: 1, ...IN });
+    }
+
+    // REVEAL — bars retract off the far edge (h: to the left; v: to the top),
+    // continuing the same sweep, uncovering the page that arrived covered.
+    function reveal(variant: "h" | "v") {
+      show();
+      document.documentElement.classList.remove("pt-cover-h", "pt-cover-v");
+      const b = bars[variant];
+      const done = () => {
+        hide();
+        getLenis()?.start();
+      };
+      if (variant === "h") {
+        gsap.set(b, { transformOrigin: "left center", scaleX: 1 });
+        gsap.to(b, { scaleX: 0, ...OUT, onComplete: done });
+      } else {
+        gsap.set(b, { transformOrigin: "center top", scaleY: 1 });
+        gsap.to(b, { scaleY: 0, ...OUT, onComplete: done });
+      }
+    }
+
+    const onHome = () => location.pathname === "/";
+    const isLab = (p: string) => p === "/lab" || p === "/lab/";
+
+    // Which curtain (if any) a click should fire:
+    //   home → /lab            ⇒ vertical
+    //   non-home → home section ⇒ horizontal
+    function variantFor(dest: string): "h" | "v" | null {
+      if (onHome()) return isLab(dest) ? "v" : null;
+      return dest === "/" ? "h" : null;
+    }
+
+    document.querySelectorAll<HTMLAnchorElement>("[data-nav-link], .logo-link").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        const href = a.getAttribute("href");
+        if (!href) return;
+        let dest: string;
+        try {
+          dest = new URL(href, location.href).pathname;
+        } catch {
+          return;
+        }
+        const variant = variantFor(dest);
+        if (!variant) return;
+        e.preventDefault();
+        sessionStorage.setItem(KEY, variant);
+        cover(variant).then(() => {
+          window.location.href = href;
+        });
+      });
+    });
+
+    // Arrival: replay the matching reveal (page arrived already covered via the
+    // inline head script).
+    const arrived = sessionStorage.getItem(KEY);
+    if (arrived === "h" || arrived === "v") {
+      sessionStorage.removeItem(KEY);
+      requestAnimationFrame(() => reveal(arrived));
+    }
+  }
+</script>
