@@ -17,7 +17,9 @@ const links = [
   { label: "LAB", href: "/lab", alt: "LAB", lab: true, active: isLab },
 ];
 
-const cta = { label: "LET'S TALK", alt: "FUN STUFF", href: sec("#contact") };
+// "LET'S TALK" opens the Calendly booking flow in a new tab (SAM-15).
+const CALENDLY_URL = "https://calendly.com/samijoehayek1/intro-call";
+const cta = { label: "LET'S TALK", alt: "FUN STUFF", href: CALENDLY_URL };
 
 // split a string into an array of chars, preserving spaces as non-breaking
 const chars = (s: string) => [...s].map((c) => (c === " " ? " " : c));
@@ -58,7 +60,13 @@ const chars = (s: string) => [...s].map((c) => (c === " " ? " " : c));
     }
   </nav>
 
-  <a class="site-header-cta" href={cta.href} data-nav-link>
+  <a
+    class="site-header-cta"
+    href={cta.href}
+    target="_blank"
+    rel="noopener noreferrer"
+    data-nav-link
+  >
     <span class="menu-text menu-text-1" aria-hidden="true">
       {
         chars(cta.label).map((ch) => (
@@ -176,7 +184,9 @@ const chars = (s: string) => [...s].map((c) => (c === " " ? " " : c));
     display: grid;
     place-items: center;
     padding: 0 clamp(1.25rem, 2vw, 2rem);
-    background: var(--c-blue);
+    /* transparent so it inherits the navbar colour (blue normally, the project
+       accent on work pages); hover still fills to black */
+    background: transparent;
     color: var(--c-black);
     border-left: var(--border);
     transition:
