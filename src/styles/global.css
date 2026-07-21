@@ -154,6 +154,41 @@ ol {
     inset 2px 0 0 rgba(255, 255, 255, 0.05),
     inset -4px 0 8px rgba(0, 0, 0, 0.14);
 }
+/* accent-tinted curtain (SAM-14): a "VIEW WORK" navigation carries the project's
+   --accent so the bars wipe in that colour instead of the blue→navy default.
+   Set pre-paint by the head script (data-pt-accent + --pt-accent), so no flash.
+   The 6 vertical bars step from the accent to a darker shade → "slightly in
+   colour", matching the default ramp's feel. */
+html[data-pt-accent] .pt-bar { background: var(--pt-accent) !important; }
+html[data-pt-accent] .pt-layer--v .pt-bar:nth-child(1) { background: color-mix(in srgb, var(--pt-accent) 96%, #000) !important; }
+html[data-pt-accent] .pt-layer--v .pt-bar:nth-child(2) { background: color-mix(in srgb, var(--pt-accent) 88%, #000) !important; }
+html[data-pt-accent] .pt-layer--v .pt-bar:nth-child(3) { background: color-mix(in srgb, var(--pt-accent) 80%, #000) !important; }
+html[data-pt-accent] .pt-layer--v .pt-bar:nth-child(4) { background: color-mix(in srgb, var(--pt-accent) 72%, #000) !important; }
+html[data-pt-accent] .pt-layer--v .pt-bar:nth-child(5) { background: color-mix(in srgb, var(--pt-accent) 64%, #000) !important; }
+html[data-pt-accent] .pt-layer--v .pt-bar:nth-child(6) { background: color-mix(in srgb, var(--pt-accent) 56%, #000) !important; }
+/* the 12 horizontal bars (VIEW WORK curtain) step top→bottom, same feel */
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(1) { background: color-mix(in srgb, var(--pt-accent) 98%, #000) !important; }
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(2) { background: color-mix(in srgb, var(--pt-accent) 94%, #000) !important; }
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(3) { background: color-mix(in srgb, var(--pt-accent) 90%, #000) !important; }
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(4) { background: color-mix(in srgb, var(--pt-accent) 86%, #000) !important; }
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(5) { background: color-mix(in srgb, var(--pt-accent) 82%, #000) !important; }
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(6) { background: color-mix(in srgb, var(--pt-accent) 78%, #000) !important; }
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(7) { background: color-mix(in srgb, var(--pt-accent) 74%, #000) !important; }
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(8) { background: color-mix(in srgb, var(--pt-accent) 70%, #000) !important; }
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(9) { background: color-mix(in srgb, var(--pt-accent) 66%, #000) !important; }
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(10) { background: color-mix(in srgb, var(--pt-accent) 62%, #000) !important; }
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(11) { background: color-mix(in srgb, var(--pt-accent) 58%, #000) !important; }
+html[data-pt-accent] .pt-layer--h .pt-bar:nth-child(12) { background: color-mix(in srgb, var(--pt-accent) 54%, #000) !important; }
+
+/* the navbar joins the accent curtain as its top "row": while the VIEW WORK
+   curtain covers, it tints from blue to the project accent (set pre-paint by the
+   head script → no flash). During the reveal it drains back to the site blue in
+   sync with the retracting bars, so the detail page always lands on the original
+   colour. Every colour change eases via the transition below — never snaps. */
+.site-header { transition: background 0.45s ease; }
+html[data-pt-accent] .site-header { background: var(--pt-accent); }
+html[data-pt-accent].pt-revealing .site-header { background: var(--c-blue); }
+
 /* no-flash: a bar-wipe navigation arrives already covered (set before paint by
    the inline head script), then the controller retracts the bars */
 html.pt-cover-h .page-transition,
