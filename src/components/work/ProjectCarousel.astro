@@ -33,10 +33,10 @@ const pad = (n: number) => String(n).padStart(2, "0");
               <div class="card__foot">
                 <a
                   class="card__cta"
-                  href={p.href ?? undefined}
-                  aria-disabled={p.href ? undefined : "true"}
-                  target={p.href ? "_blank" : undefined}
-                  rel={p.href ? "noopener noreferrer" : undefined}
+                  href={p.slug ? `/work/${p.slug}` : undefined}
+                  data-work-cta={p.slug ? "" : undefined}
+                  data-accent={p.accent}
+                  aria-disabled={p.slug ? undefined : "true"}
                 >
                   <span>VIEW WORK</span>
                   <span class="card__arrow">&rarr;</span>
@@ -233,17 +233,42 @@ const pad = (n: number) => String(n).padStart(2, "0");
     align-items: center;
     justify-content: space-between;
     border: 2px solid var(--c-black);
-    border-radius: 0; /* squared off, like Dave's */
+    border-radius: 0; /* squared at rest, like Dave's */
     padding: clamp(0.65rem, 1.5vw, 0.95rem) clamp(0.85rem, 1.7vw, 1.25rem);
     font-family: var(--font-display);
     font-size: clamp(1rem, 1.7vw, 1.4rem);
     text-decoration: none;
     color: var(--c-black);
-    transition: background 0.18s ease, color 0.18s ease;
   }
   .card__cta[aria-disabled="true"] { opacity: 0.4; pointer-events: none; }
-  .card__cta:hover { background: var(--c-gold); }
-  .card__arrow { border-left: 2px solid var(--c-black); padding-left: 0.8rem; }
+
+  /* SAM-115 — hover: a directional "wave" of curvature. It bumps up on the LEFT
+     corners, flows across to the RIGHT (echoing the left→right VIEW WORK curtain),
+     then settles back to square. No colour change — the motion is the affordance. */
+  @keyframes cta-wave {
+    0% { border-radius: 0; }
+    30% { border-radius: 22px 4px 4px 22px; } /* left corners bulge up */
+    65% { border-radius: 4px 22px 22px 4px; } /* curvature flows to the right */
+    100% { border-radius: 0; } /* settle back to square */
+  }
+  .card__cta:hover,
+  .card__cta:focus-visible {
+    animation: cta-wave 0.66s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .card__arrow {
+    border-left: 2px solid var(--c-black);
+    padding-left: 0.8rem;
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .card__cta:hover .card__arrow,
+  .card__cta:focus-visible .card__arrow { transform: translateX(4px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card__cta:hover,
+    .card__cta:focus-visible { animation: none; }
+    .card__cta:hover .card__arrow,
+    .card__cta:focus-visible .card__arrow { transform: none; }
+  }
   .card__count {
     align-self: flex-end;
     font-family: var(--font-display);
