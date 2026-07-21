@@ -12,6 +12,7 @@ export interface Project {
   image: string; // /work-assets/projects/*.webp (gets the distortion shader)
   depth?: string; // optional grayscale depth map → enables 2.5D parallax + idle drift
   href: string | null; // external URL, or null → CTA inert
+  slug?: string; // case-study page slug (/work/[slug]); set once the page exists → CTA active
   accent: string; // hex — per-card accent + shader burst tint
 }
 
@@ -31,7 +32,7 @@ export const projects: Project[] = [
   },
   {
     index: 2,
-    client: "BTC CORE",
+    client: "BTC BACKED",
     role: "Senior Software Engineer",
     tags: ["BITCOIN", "PSBT", "LENDING"],
     year: "2025",
@@ -40,6 +41,7 @@ export const projects: Project[] = [
     image: "/work-assets/projects/btccore.webp",
     depth: "/work-assets/projects/btccore-depth.webp",
     href: null,
+    slug: "btc-backed",
     accent: "#f7931a",
   },
   {
