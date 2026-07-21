@@ -39,8 +39,16 @@ const ogImageURL = new URL(ogImage, SITE);
       (function () {
         try {
           var v = sessionStorage.getItem("pt-nav");
-          if (v === "h") document.documentElement.classList.add("pt-cover-h");
+          // "h" and "hl" share the same covered state (12 horizontal bars); they
+          // only differ in sweep direction, which the reveal controller handles.
+          if (v === "h" || v === "hl") document.documentElement.classList.add("pt-cover-h");
           else if (v === "v") document.documentElement.classList.add("pt-cover-v");
+          // accent-tinted curtain (SAM-14): apply the project colour before paint
+          var a = sessionStorage.getItem("pt-accent");
+          if (a) {
+            document.documentElement.setAttribute("data-pt-accent", "");
+            document.documentElement.style.setProperty("--pt-accent", a);
+          }
         } catch (e) {}
         var skip = function (e) {
           try {
