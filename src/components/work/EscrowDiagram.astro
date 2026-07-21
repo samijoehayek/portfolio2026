@@ -1,0 +1,129 @@
+---
+// Sanitized architecture diagram for BTC BACKED — the non-custodial 2-of-3
+// multisig escrow + price-triggered liquidation. No proprietary detail; it
+// communicates the *design*, which is the point when the code is private.
+// Colours inherit the page --accent (orange); borders are black, per the system.
+---
+
+<figure class="diag" aria-labelledby="diag-cap">
+  <svg viewBox="0 0 920 540" role="img" aria-label="Borrower and lender fund a 2-of-3 multisig escrow; a price oracle feeds an LTV monitor that can trigger liquidation.">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#000" />
+      </marker>
+    </defs>
+
+    <!-- actors -->
+    <g class="node">
+      <rect x="30" y="40" width="230" height="96" rx="4" />
+      <text class="t-lg" x="145" y="82">BORROWER</text>
+      <text class="t-sm" x="145" y="110">Keeps custody · signs PSBTs</text>
+    </g>
+    <g class="node">
+      <rect x="660" y="40" width="230" height="96" rx="4" />
+      <text class="t-lg" x="775" y="82">LENDER</text>
+      <text class="t-sm" x="775" y="110">Funds the loan · earns yield</text>
+    </g>
+
+    <!-- escrow (accent) -->
+    <g class="node node--accent">
+      <rect x="300" y="215" width="320" height="120" rx="4" />
+      <text class="t-lg" x="460" y="258">2-OF-3 MULTISIG ESCROW</text>
+      <text class="t-sm" x="460" y="286">Borrower · Lender · Protocol keys</text>
+      <text class="t-sm" x="460" y="308">PSBT · BIP32/44 HD derivation</text>
+    </g>
+
+    <!-- oracle / monitor / liquidation -->
+    <g class="node">
+      <rect x="30" y="420" width="210" height="86" rx="4" />
+      <text class="t-md" x="135" y="456">PRICE ORACLE</text>
+      <text class="t-sm" x="135" y="482">BTC / USD feed</text>
+    </g>
+    <g class="node">
+      <rect x="355" y="420" width="210" height="86" rx="4" />
+      <text class="t-md" x="460" y="456">LTV MONITOR</text>
+      <text class="t-sm" x="460" y="482">Real-time · per loan</text>
+    </g>
+    <g class="node node--accent">
+      <rect x="680" y="420" width="210" height="86" rx="4" />
+      <text class="t-md" x="785" y="456">LIQUIDATION</text>
+      <text class="t-sm" x="785" y="482">By protocol rule</text>
+    </g>
+
+    <!-- flows -->
+    <!-- lender → borrower : loan capital (top) -->
+    <path class="edge" d="M660 66 L262 66" marker-end="url(#ah)" />
+    <text class="e-lbl" x="461" y="54">loan capital</text>
+
+    <!-- borrower → escrow : BTC collateral -->
+    <path class="edge" d="M170 138 L360 213" marker-end="url(#ah)" />
+    <text class="e-lbl" x="222" y="188">BTC collateral</text>
+
+    <!-- escrow → borrower : repay → release (dashed return) -->
+    <path class="edge edge--dash" d="M330 213 L200 138" marker-end="url(#ah)" />
+    <text class="e-lbl" x="318" y="164">repay → release</text>
+
+    <!-- oracle → monitor -->
+    <path class="edge" d="M240 463 L353 463" marker-end="url(#ah)" />
+
+    <!-- monitor → escrow : monitors (dashed, up) -->
+    <path class="edge edge--dash" d="M460 420 L460 337" marker-end="url(#ah)" />
+    <text class="e-lbl" x="460" y="388">monitors LTV</text>
+
+    <!-- monitor → liquidation : LTV breach -->
+    <path class="edge" d="M565 463 L678 463" marker-end="url(#ah)" />
+    <text class="e-lbl" x="622" y="450">breach</text>
+
+    <!-- liquidation → lender : collateral to lender (up right) -->
+    <path class="edge" d="M785 420 L785 138" marker-end="url(#ah)" />
+    <text class="e-lbl" x="822" y="285">collateral → lender</text>
+  </svg>
+</figure>
+
+<style>
+  .diag {
+    margin: 0;
+  }
+  .diag svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: var(--c-white);
+  }
+  .node rect {
+    fill: var(--c-white);
+    stroke: var(--c-black);
+    stroke-width: 3;
+  }
+  .node--accent rect {
+    fill: var(--accent, var(--c-gold));
+  }
+  .node text {
+    fill: var(--c-black);
+    text-anchor: middle;
+    font-family: var(--font-display);
+  }
+  .t-lg { font-size: 30px; letter-spacing: 0.01em; }
+  .t-md { font-size: 24px; }
+  .t-sm {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 15px;
+    fill: color-mix(in srgb, var(--c-black) 72%, transparent);
+  }
+  .edge {
+    fill: none;
+    stroke: var(--c-black);
+    stroke-width: 2.5;
+  }
+  .edge--dash { stroke-dasharray: 7 6; opacity: 0.75; }
+  .e-lbl {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 14px;
+    fill: var(--c-black);
+    text-anchor: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+</style>
