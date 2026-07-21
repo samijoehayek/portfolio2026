@@ -49,76 +49,130 @@ const vBars = ramp(6);
     const IN = { duration: 0.42, stagger: 0.04, ease: "power2.inOut" };
     const OUT = { duration: 0.4, stagger: 0.035, ease: "power2.inOut" };
 
-    // COVER — bars grow along their length, chained. h: from the right; v: from
-    // the bottom (down→up).
-    function cover(variant: "h" | "v") {
+    // Three curtains, all sharing timing + colour mechanics:
+    //   "h"  — 12 horizontal bars, enter from the RIGHT (sweep left)
+    //   "hl" — 12 horizontal bars, enter from the LEFT  (sweep right) [VIEW WORK]
+    //   "v"  — 6 vertical bars, enter from the bottom (up)
+    type Variant = "h" | "hl" | "v";
+    const barsFor = (v: Variant) => (v === "v" ? bars.v : bars.h);
+
+    // COVER — bars grow along their length, chained.
+    function cover(variant: Variant) {
       show();
       getLenis()?.stop();
-      const b = bars[variant];
-      if (variant === "h") {
-        gsap.set(b, { transformOrigin: "right center", scaleX: 0, scaleY: 1 });
-        return gsap.to(b, { scaleX: 1, ...IN });
+      const b = barsFor(variant);
+      if (variant === "v") {
+        gsap.set(b, { transformOrigin: "center bottom", scaleY: 0, scaleX: 1 });
+        return gsap.to(b, { scaleY: 1, ...IN });
       }
-      gsap.set(b, { transformOrigin: "center bottom", scaleY: 0, scaleX: 1 });
-      return gsap.to(b, { scaleY: 1, ...IN });
+      // "h" grows from the right edge; "hl" grows from the left edge
+      gsap.set(b, {
+        transformOrigin: variant === "hl" ? "left center" : "right center",
+        scaleX: 0,
+        scaleY: 1,
+      });
+      return gsap.to(b, { scaleX: 1, ...IN });
     }
 
-    // REVEAL — bars retract off the far edge (h: to the left; v: to the top),
-    // continuing the same sweep, uncovering the page that arrived covered.
-    function reveal(variant: "h" | "v") {
+    // REVEAL — bars retract off the far edge, continuing the same sweep,
+    // uncovering the page that arrived covered.
+    function reveal(variant: Variant) {
       show();
-      document.documentElement.classList.remove("pt-cover-h", "pt-cover-v");
-      const b = bars[variant];
+      const root = document.documentElement;
+      root.classList.remove("pt-cover-h", "pt-cover-v");
+      // "pt-revealing" drains the navbar accent back to blue while the bars are
+      // still tinted — so the navbar eases to its original colour in sync with
+      // the retract and the detail page lands on blue.
+      root.classList.add("pt-revealing");
+      const b = barsFor(variant);
       const done = () => {
         hide();
         getLenis()?.start();
+        // drop the accent tint so it never leaks into a later navigation
+        root.classList.remove("pt-revealing");
+        root.removeAttribute("data-pt-accent");
+        root.style.removeProperty("--pt-accent");
       };
-      if (variant === "h") {
-        gsap.set(b, { transformOrigin: "left center", scaleX: 1 });
-        gsap.to(b, { scaleX: 0, ...OUT, onComplete: done });
-      } else {
+      if (variant === "v") {
         gsap.set(b, { transformOrigin: "center top", scaleY: 1 });
         gsap.to(b, { scaleY: 0, ...OUT, onComplete: done });
+        return;
       }
+      // "h" exits to the left; "hl" exits to the right — continuing the sweep
+      gsap.set(b, { transformOrigin: variant === "hl" ? "right center" : "left center", scaleX: 1 });
+      gsap.to(b, { scaleX: 0, ...OUT, onComplete: done });
     }
 
     const onHome = () => location.pathname === "/";
+    const onWork = () => location.pathname.startsWith("/work/");
     const isLab = (p: string) => p === "/lab" || p === "/lab/";
 
     // Which curtain (if any) a click should fire:
-    //   home → /lab            ⇒ vertical
-    //   non-home → home section ⇒ horizontal
-    function variantFor(dest: string): "h" | "v" | null {
-      if (onHome()) return isLab(dest) ? "v" : null;
+    //   home → /lab              ⇒ vertical
+    //   home → /work/[slug]      ⇒ horizontal, LEFT→RIGHT (accent-tinted; SAM-14)
+    //   /work/[slug] → /lab      ⇒ vertical (same as home → lab)
+    //   non-home → home section  ⇒ horizontal, right→left
+    function variantFor(dest: string): Variant | null {
+      if (onHome()) {
+        if (isLab(dest)) return "v";
+        if (dest.startsWith("/work/")) return "hl";
+        return null;
+      }
+      if (onWork()) {
+        if (isLab(dest)) return "v";
+        return dest === "/" ? "h" : null;
+      }
       return dest === "/" ? "h" : null;
     }
 
-    document.querySelectorAll<HTMLAnchorElement>("[data-nav-link], .logo-link").forEach((a) => {
-      a.addEventListener("click", (e) => {
-        if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-        const href = a.getAttribute("href");
-        if (!href) return;
-        let dest: string;
-        try {
-          dest = new URL(href, location.href).pathname;
-        } catch {
-          return;
-        }
-        const variant = variantFor(dest);
-        if (!variant) return;
-        e.preventDefault();
-        sessionStorage.setItem(KEY, variant);
-        cover(variant).then(() => {
-          window.location.href = href;
+    // Apply / clear the per-project accent tint for the curtain.
+    function setAccent(accent: string | null) {
+      const root = document.documentElement;
+      if (accent) {
+        root.setAttribute("data-pt-accent", "");
+        root.style.setProperty("--pt-accent", accent);
+        sessionStorage.setItem("pt-accent", accent);
+      } else {
+        root.removeAttribute("data-pt-accent");
+        root.style.removeProperty("--pt-accent");
+        sessionStorage.removeItem("pt-accent");
+      }
+    }
+
+    document
+      .querySelectorAll<HTMLAnchorElement>("[data-nav-link], .logo-link, [data-work-cta]")
+      .forEach((a) => {
+        a.addEventListener("click", (e) => {
+          if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+          const href = a.getAttribute("href");
+          if (!href) return;
+          let dest: string;
+          try {
+            dest = new URL(href, location.href).pathname;
+          } catch {
+            return;
+          }
+          const variant = variantFor(dest);
+          if (!variant) return;
+          e.preventDefault();
+          // "VIEW WORK" carries the card's accent so the curtain wipes in colour
+          setAccent(a.hasAttribute("data-work-cta") ? a.getAttribute("data-accent") : null);
+          sessionStorage.setItem(KEY, variant);
+          cover(variant).then(() => {
+            window.location.href = href;
+          });
         });
       });
-    });
 
     // Arrival: replay the matching reveal (page arrived already covered via the
     // inline head script).
     const arrived = sessionStorage.getItem(KEY);
-    if (arrived === "h" || arrived === "v") {
+    if (arrived === "h" || arrived === "hl" || arrived === "v") {
       sessionStorage.removeItem(KEY);
+      // the tint was already applied pre-paint by the head script; clear the
+      // stored value so it can't leak into the next navigation (reveal's done()
+      // strips the attribute/var once the curtain finishes retracting)
+      sessionStorage.removeItem("pt-accent");
       requestAnimationFrame(() => reveal(arrived));
     }
   }
