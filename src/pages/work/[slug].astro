@@ -1,0 +1,510 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import EscrowDiagram from "../../components/work/EscrowDiagram.astro";
+import { caseStudies } from "../../data/caseStudies";
+
+export async function getStaticPaths() {
+  return Object.values(caseStudies).map((cs) => ({
+    params: { slug: cs.slug },
+    props: { cs },
+  }));
+}
+
+const { cs } = Astro.props;
+const primary = cs.links.find((l) => l.kind === "primary");
+const rest = cs.links.filter((l) => l.kind !== "primary");
+---
+
+<Layout title={`${cs.client} — Work`} description={cs.overview}>
+  <Header />
+
+  <main class="cs" data-cs style={`--accent:${cs.accent}`}>
+    <!-- ── sticky info rail (Dave-Holloway anatomy) ─────────────── -->
+    <aside class="cs__rail">
+      <div class="cs__wordmark">{cs.client}</div>
+
+      <div class="cs__info">
+        <!-- data-work-cta + data-accent → fires the accent curtain (horizontal,
+             right→left: the reverse of the VIEW WORK entry) back to the work section -->
+        <a class="cs__back" href="/#work" data-work-cta data-accent={cs.accent}>
+          <span aria-hidden="true">←</span> Work
+        </a>
+
+        <p class="cs__label">CLIENT</p>
+        <p class="cs__client">{cs.client}</p>
+        <p class="cs__role">{cs.role} · {cs.year}</p>
+
+        <ul class="cs__tags">
+          {cs.tags.map((t) => <li>{t}</li>)}
+        </ul>
+
+        {cs.privacyNote && <p class="cs__private">{cs.privacyNote}</p>}
+
+        <div class="cs__cta-group">
+          {
+            primary &&
+              (primary.href ? (
+                <a
+                  class="cs__cta cs__cta--primary"
+                  href={primary.href}
+                  target={primary.external ? "_blank" : undefined}
+                  rel={primary.external ? "noopener noreferrer" : undefined}
+                >
+                  <span>{primary.label}</span>
+                  <span class="cs__cta-arrow">&rarr;</span>
+                </a>
+              ) : (
+                <span class="cs__cta cs__cta--primary is-slot">{primary.label}</span>
+              ))
+          }
+
+          <div class="cs__cta-sub">
+            {
+              rest.map((l) =>
+                l.href ? (
+                  <a
+                    class={`cs__cta cs__cta--${l.kind}`}
+                    href={l.href}
+                    target={l.external ? "_blank" : undefined}
+                    rel={l.external ? "noopener noreferrer" : undefined}
+                  >
+                    <span>{l.label}</span>
+                    {l.note && <small>{l.note}</small>}
+                  </a>
+                ) : (
+                  <span class={`cs__cta cs__cta--${l.kind} is-slot`}>
+                    <span>{l.label}</span>
+                    {l.note && <small>{l.note}</small>}
+                  </span>
+                ),
+              )
+            }
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── scrolling content column ─────────────────────────────── -->
+    <div class="cs__content">
+      <header class="cs__intro">
+        <h1 class="cs__title">{cs.title}</h1>
+        <p class="cs__overview">{cs.overview}</p>
+
+        <div class="cs__cols">
+          <div class="cs__owned">
+            <h2>What I owned</h2>
+            <ul>
+              {cs.contributions.map((c) => <li>{c}</li>)}
+            </ul>
+          </div>
+          {
+            cs.trust && (
+              <ul class="cs__trust">
+                {cs.trust.map((b) => (
+                  <li>
+                    <span class="cs__trust-k">{b.label}</span>
+                    <span class="cs__trust-v">{b.value}</span>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+        </div>
+      </header>
+
+      <div class="cs__gallery">
+        {
+          cs.gallery.map((m) => (
+            <figure class={`cs__block cs__block--${m.frame ?? "none"}`}>
+              {m.kind === "diagram" && <EscrowDiagram />}
+
+              {m.kind === "image" && m.src && (
+                <div class="cs__media">
+                  {m.frame === "browser" && (
+                    <div class="cs__chrome" aria-hidden="true">
+                      <span /> <span /> <span />
+                    </div>
+                  )}
+                  <img src={m.src} alt={m.alt ?? ""} loading="lazy" decoding="async" />
+                </div>
+              )}
+
+              {m.kind === "video" &&
+                (m.src ? (
+                  <div class="cs__media cs__media--video">
+                    <iframe
+                      src={m.src}
+                      title={m.caption ?? "Walkthrough"}
+                      allow="fullscreen"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div class="cs__slot" role="note">
+                    <span class="cs__slot-badge">▶ WALKTHROUGH</span>
+                    <p>{m.placeholder}</p>
+                  </div>
+                ))}
+
+              {m.caption && <figcaption>{m.caption}</figcaption>}
+            </figure>
+          ))
+        }
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .cs {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(320px, 30%) 1fr;
+    align-items: start;
+    padding: var(--header-h) 0 0;
+    min-height: 100vh;
+  }
+
+  /* ── sticky rail ─────────────────────────────────────────── */
+  .cs__rail {
+    position: sticky;
+    top: var(--header-h);
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - var(--header-h));
+    border-right: var(--bw) solid var(--c-black);
+  }
+  .cs__wordmark {
+    background: var(--c-black);
+    color: var(--c-white);
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 4vw, 4.4rem);
+    line-height: 0.9;
+    padding: clamp(1.4rem, 2.6vw, 2.4rem) var(--gutter);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+  }
+  .cs__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: clamp(1.2rem, 2.2vw, 2rem) var(--gutter);
+    /* the accent "square" — orange for BTC BACKED, black border via the rail */
+    background: var(--accent);
+    color: var(--c-black);
+  }
+  .cs__back {
+    align-self: flex-start;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    margin-bottom: 0.8rem;
+    transition: gap 0.2s ease, opacity 0.2s ease;
+    display: inline-flex;
+    gap: 0.4rem;
+    opacity: 0.85;
+  }
+  .cs__back:hover { opacity: 1; gap: 0.7rem; }
+  .cs__label {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    color: color-mix(in srgb, var(--c-black) 65%, transparent);
+  }
+  .cs__client {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    line-height: 0.92;
+  }
+  .cs__role {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: color-mix(in srgb, var(--c-black) 66%, transparent);
+  }
+  .cs__tags {
+    margin: 0.8rem calc(-1 * var(--gutter)) 0;
+    padding: 0.9rem var(--gutter) 0;
+    border-top: 2px solid var(--c-black);
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(0.8rem, 1.6vw, 1.4rem);
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.07em;
+  }
+  .cs__tags li {
+    position: relative;
+    padding-top: 0.85rem;
+  }
+  .cs__tags li::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 5px solid transparent;
+    border-top-color: var(--c-black);
+  }
+  .cs__private {
+    margin-top: 1rem;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: color-mix(in srgb, var(--c-black) 78%, transparent);
+  }
+
+  /* ── CTAs ────────────────────────────────────────────────── */
+  .cs__cta-group {
+    margin-top: auto;
+    padding-top: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .cs__cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    border: 2px solid var(--c-black);
+    padding: 0.75rem 1rem;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    color: var(--c-black);
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+  .cs__cta--primary {
+    background: var(--c-black);
+    color: var(--accent);
+  }
+  .cs__cta--primary:hover { background: var(--c-white); color: var(--c-black); }
+  .cs__cta-arrow { transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+  .cs__cta--primary:hover .cs__cta-arrow { transform: translateX(4px); }
+
+  .cs__cta-sub {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .cs__cta--secondary,
+  .cs__cta--tertiary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    font-size: 0.98rem;
+    background: transparent;
+  }
+  .cs__cta--secondary:hover,
+  .cs__cta--tertiary:hover { background: var(--c-black); color: var(--accent); }
+  .cs__cta--tertiary {
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--c-black) 45%, transparent);
+  }
+  .cs__cta small {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  /* inert labelled slot (e.g. the Loom before it's recorded) — never a dead link */
+  .cs__cta.is-slot {
+    border-style: dashed;
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  /* ── content column ──────────────────────────────────────── */
+  .cs__content {
+    min-width: 0;
+    padding: clamp(1.6rem, 3vw, 3rem) var(--gutter) clamp(4rem, 8vh, 7rem);
+    color: var(--c-white);
+  }
+  .cs__intro {
+    max-width: 60ch;
+    margin-bottom: clamp(2rem, 5vh, 3.5rem);
+  }
+  .cs__title {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    font-weight: 400;
+    line-height: 0.96;
+    font-size: clamp(2rem, 4vw, 3.6rem);
+    color: var(--c-white);
+  }
+  .cs__overview {
+    margin-top: 1.4rem;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .cs__cols {
+    margin-top: clamp(1.6rem, 4vh, 2.6rem);
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: clamp(1.4rem, 3vw, 2.6rem);
+  }
+  .cs__owned h2 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.8rem;
+    color: var(--accent);
+    padding-bottom: 0.7rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    margin-bottom: 1rem;
+  }
+  .cs__owned ul { display: flex; flex-direction: column; gap: 0.8rem; }
+  .cs__owned li {
+    position: relative;
+    padding-left: 1.3rem;
+    font-family: var(--font-sans);
+    font-size: 0.98rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.82);
+  }
+  .cs__owned li::before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+  .cs__trust {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: var(--bw) solid var(--c-black);
+    align-self: start;
+  }
+  .cs__trust li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.8rem 1rem;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+  .cs__trust li + li { border-top: 2px solid var(--c-black); }
+  .cs__trust-k {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.62rem;
+    color: var(--accent);
+  }
+  .cs__trust-v {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #fff;
+  }
+
+  /* ── gallery ─────────────────────────────────────────────── */
+  .cs__gallery {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.6rem, 4vh, 3rem);
+  }
+  .cs__block { margin: 0; }
+  .cs__media,
+  .cs__slot,
+  .diag {
+    border: var(--bw) solid var(--c-black);
+    box-shadow: 8px 8px 0 0 rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+  }
+  .cs__media { position: relative; background: #0a0a0a; }
+  .cs__media img { width: 100%; display: block; }
+  .cs__chrome {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.6rem 0.9rem;
+    background: var(--c-black);
+  }
+  .cs__chrome span {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.9;
+  }
+  .cs__chrome span:nth-child(2) { opacity: 0.55; }
+  .cs__chrome span:nth-child(3) { opacity: 0.3; }
+  .cs__media--video { aspect-ratio: 16 / 9; }
+  .cs__media--video iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+  .cs__slot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    align-items: flex-start;
+    justify-content: center;
+    aspect-ratio: 16 / 9;
+    padding: clamp(1.4rem, 4vw, 3rem);
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.03) 0 14px,
+      rgba(255, 255, 255, 0.06) 14px 28px
+    );
+    box-shadow: none;
+    border-style: dashed;
+  }
+  .cs__slot-badge {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+  .cs__slot p {
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 46ch;
+  }
+
+  .cs__block figcaption {
+    margin-top: 0.8rem;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  /* ── responsive: rail stacks above the content ───────────── */
+  @media (max-width: 900px) {
+    .cs { grid-template-columns: 1fr; }
+    .cs__rail {
+      position: static;
+      min-height: 0;
+      border-right: none;
+      border-bottom: var(--bw) solid var(--c-black);
+    }
+    .cs__cols { grid-template-columns: 1fr; }
+    .cs__wordmark { white-space: normal; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cs__back, .cs__cta, .cs__cta-arrow { transition: none; }
+  }
+</style>
