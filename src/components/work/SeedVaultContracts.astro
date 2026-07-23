@@ -1,0 +1,128 @@
+---
+// The deployed SeedVault contract suite on Base mainnet (chain 8453).
+// Addresses are public + source-verified — this doubles as tangible proof and a
+// tech showcase. Sourced from ignition/deployments/chain-8453/deployed_addresses.
+const BASE = "https://basescan.org/address/";
+const contracts: { name: string; note: string; addr: string; hero?: boolean }[] = [
+  { name: "SVLT Token", note: "ERC-3643 security token", addr: "0x84376a6fb9419E0b018977b15533408d5430065B", hero: true },
+  { name: "ModularCompliance", note: "canTransfer() engine", addr: "0xbEDeE3c86C6ceDCd6A2825D2F9Cb37A33cDE1254" },
+  { name: "CountryAllowModule", note: "ISO country allowlist", addr: "0x59fA05Fd852E5001a9BC137f2Fe6f475A7Da1704" },
+  { name: "IdentityRegistry", note: "isVerified() gate", addr: "0x46befdFCB61C54e7D9897945BAcC16706B81e609" },
+  { name: "IdentityRegistryStorage", note: "wallet → ONCHAINID", addr: "0xA6aEa00187d16123E50365390Fe0966e1Ee267C5" },
+  { name: "ClaimTopicsRegistry", note: "required claims", addr: "0x27076A0D0580D2fa7323FF717B4B446dB3Db00bF" },
+  { name: "TrustedIssuersRegistry", note: "authorised KYC issuers", addr: "0xc8e8e17285261B39B55772C3C9FEcFb9F6AE48E1" },
+  { name: "ClaimIssuer", note: "signs KYC claims", addr: "0xaa0976339562628980Ad376fEc1adb11E9239f14" },
+  { name: "TokenOnchainId", note: "token's ONCHAINID", addr: "0x608890C7123199C0331c433891fF1BAdFc3d5693" },
+  { name: "ONCHAINIDFactory", note: "EIP-1167 clones", addr: "0x45ef1c55b6632C99a27eaE9597ef95a3B1eF4dE3" },
+  { name: "IdentityImplementation", note: "clone template", addr: "0x75188449543778B5293ADf49928A6739794ddd7E" },
+  { name: "NAVStore", note: "NAV oracle · 8 dp", addr: "0x42AF6b5bA3b0b69a770D64faabacc27eD93BA0c3" },
+  { name: "DocumentsRegistry", note: "IPFS · append-only", addr: "0x7d1290465aD5178Cc4513625848aA68497bd3927" },
+];
+const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+---
+
+<div class="cmap">
+  <div class="cmap__head">
+    <span class="cmap__badge">◆ BASE MAINNET · chain 8453</span>
+    <span class="cmap__note">13 contracts · source-verified on BaseScan</span>
+  </div>
+  <ul class="cmap__grid">
+    {
+      contracts.map((c) => (
+        <li class={c.hero ? "cmap__cell cmap__cell--hero" : "cmap__cell"}>
+          <a href={`${BASE}${c.addr}`} target="_blank" rel="noopener noreferrer">
+            <span class="cmap__name">{c.name}</span>
+            <span class="cmap__desc">{c.note}</span>
+            <span class="cmap__addr">{short(c.addr)} <i aria-hidden="true">↗</i></span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .cmap {
+    border: var(--bw) solid var(--c-black);
+    background: var(--c-white);
+    box-shadow: 8px 8px 0 0 rgba(0, 0, 0, 0.5);
+  }
+  .cmap__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+    background: var(--c-black);
+  }
+  .cmap__badge {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: var(--accent, var(--c-gold));
+    letter-spacing: 0.04em;
+  }
+  .cmap__note {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.65);
+  }
+  .cmap__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    list-style: none;
+  }
+  .cmap__cell {
+    border-top: 2px solid var(--c-black);
+    border-right: 2px solid var(--c-black);
+  }
+  /* tidy the right edge of each row (3-col) */
+  .cmap__cell:nth-child(3n) { border-right: none; }
+  .cmap__cell a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.8rem 0.9rem;
+    text-decoration: none;
+    color: var(--c-black);
+    transition: background 0.16s ease;
+  }
+  .cmap__cell a:hover { background: color-mix(in srgb, var(--accent) 18%, var(--c-white)); }
+  .cmap__cell--hero { background: var(--accent); }
+  .cmap__cell--hero a:hover { background: color-mix(in srgb, var(--accent) 82%, #000); }
+  .cmap__name {
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+    line-height: 1.05;
+  }
+  .cmap__desc {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.7rem;
+    color: color-mix(in srgb, var(--c-black) 60%, transparent);
+  }
+  .cmap__addr {
+    margin-top: 0.35rem;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: color-mix(in srgb, var(--c-black) 78%, transparent);
+  }
+  .cmap__addr i { font-style: normal; opacity: 0.6; }
+
+  @media (max-width: 620px) {
+    .cmap__grid { grid-template-columns: repeat(2, 1fr); }
+    .cmap__cell:nth-child(3n) { border-right: 2px solid var(--c-black); }
+    .cmap__cell:nth-child(2n) { border-right: none; }
+  }
+  @media (max-width: 430px) {
+    .cmap__head { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+    .cmap__grid { grid-template-columns: 1fr; }
+    .cmap__cell { border-right: none; }
+    .cmap__cell:nth-child(3n) { border-right: none; }
+  }
+</style>

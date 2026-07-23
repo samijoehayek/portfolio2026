@@ -1,0 +1,154 @@
+---
+// SeedVault (SVLT) — how ERC-3643 gates every transfer. Sanitized from the real
+// architecture (CLAUDE.md transfer flow): a transfer must clear BOTH the modular
+// compliance engine (country allowlist) AND the identity registry, which resolves
+// through the T-REX triple registry to the receiver's ONCHAINID KYC claims.
+// Colours inherit the page --accent; borders are black, per the system.
+---
+
+<figure class="diag">
+  <svg viewBox="0 0 960 600" role="img" aria-label="An SVLT transfer is checked by ModularCompliance (country allowlist) and IdentityRegistry.isVerified, which resolves through the triple registry to the receiver's ONCHAINID KYC claims before value can move.">
+    <defs>
+      <marker id="svah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#000" />
+      </marker>
+    </defs>
+
+    <!-- actors + token -->
+    <g class="node">
+      <rect x="24" y="48" width="168" height="68" rx="4" />
+      <text class="t-md" x="108" y="80">HOLDER A</text>
+      <text class="t-sm" x="108" y="102">verified</text>
+    </g>
+    <g class="node node--accent">
+      <rect x="372" y="26" width="232" height="104" rx="4" />
+      <text class="t-md" x="488" y="62">SEEDVAULT · SVLT</text>
+      <text class="t-sm" x="488" y="86">ERC-3643 security token</text>
+      <text class="t-sm" x="488" y="108">every transfer() gated on-chain</text>
+    </g>
+    <g class="node">
+      <rect x="768" y="48" width="168" height="68" rx="4" />
+      <text class="t-md" x="852" y="80">HOLDER B</text>
+      <text class="t-sm" x="852" y="102">receiver</text>
+    </g>
+
+    <!-- gates -->
+    <g class="node">
+      <rect x="60" y="210" width="344" height="92" rx="4" />
+      <text class="t-md" x="232" y="252">MODULAR COMPLIANCE</text>
+      <text class="t-sm" x="232" y="276">canTransfer()</text>
+    </g>
+    <g class="node">
+      <rect x="556" y="210" width="344" height="92" rx="4" />
+      <text class="t-md" x="728" y="252">IDENTITY REGISTRY</text>
+      <text class="t-sm" x="728" y="276">isVerified(receiver)</text>
+    </g>
+
+    <!-- compliance leaf -->
+    <g class="node">
+      <rect x="120" y="348" width="224" height="74" rx="4" />
+      <text class="t-reg" x="232" y="382">COUNTRY ALLOWLIST</text>
+      <text class="t-sm" x="232" y="404">receiver country allowed</text>
+    </g>
+
+    <!-- triple registry -->
+    <g class="node">
+      <rect x="468" y="348" width="140" height="74" rx="4" />
+      <text class="t-reg" x="538" y="380">IR STORAGE</text>
+      <text class="t-xs" x="538" y="400">wallet → ONCHAINID</text>
+    </g>
+    <g class="node">
+      <rect x="620" y="348" width="140" height="74" rx="4" />
+      <text class="t-reg" x="690" y="380">CLAIM TOPICS</text>
+      <text class="t-xs" x="690" y="400">required claims</text>
+    </g>
+    <g class="node">
+      <rect x="772" y="348" width="150" height="74" rx="4" />
+      <text class="t-reg" x="847" y="380">TRUSTED ISSUERS</text>
+      <text class="t-xs" x="847" y="400">authorised signers</text>
+    </g>
+
+    <!-- onchainid -->
+    <g class="node node--accent">
+      <rect x="556" y="470" width="344" height="92" rx="4" />
+      <text class="t-md" x="728" y="512">ONCHAINID PASSPORT</text>
+      <text class="t-sm" x="728" y="536">KYC claims signed by a trusted issuer</text>
+    </g>
+
+    <!-- add-ons cluster -->
+    <text class="grp" x="60" y="452">TOKEN ADD-ONS</text>
+    <g class="node">
+      <rect x="60" y="466" width="158" height="66" rx="4" />
+      <text class="t-reg" x="139" y="498">NAV STORE</text>
+      <text class="t-xs" x="139" y="518">oracle · 8 dp</text>
+    </g>
+    <g class="node">
+      <rect x="236" y="466" width="158" height="66" rx="4" />
+      <text class="t-reg" x="315" y="498">DOCUMENTS</text>
+      <text class="t-xs" x="315" y="518">IPFS · append-only</text>
+    </g>
+
+    <!-- flows -->
+    <path class="edge" d="M192 82 L366 80" marker-end="url(#svah)" />
+    <path class="edge edge--dash" d="M604 80 L762 82" marker-end="url(#svah)" />
+    <text class="e-lbl" x="684" y="66">settles ✓</text>
+
+    <path class="edge" d="M452 130 L280 208" marker-end="url(#svah)" />
+    <text class="e-lbl" x="332" y="178">① compliance</text>
+    <path class="edge" d="M524 130 L688 208" marker-end="url(#svah)" />
+    <text class="e-lbl" x="646" y="178">② identity</text>
+
+    <path class="edge" d="M232 302 L232 346" marker-end="url(#svah)" />
+
+    <path class="edge" d="M676 302 L558 346" marker-end="url(#svah)" />
+    <path class="edge" d="M722 302 L697 346" marker-end="url(#svah)" />
+    <path class="edge" d="M772 302 L838 346" marker-end="url(#svah)" />
+
+    <path class="edge" d="M548 422 L648 468" marker-end="url(#svah)" />
+    <path class="edge" d="M690 422 L716 468" marker-end="url(#svah)" />
+    <path class="edge" d="M838 422 L804 468" marker-end="url(#svah)" />
+  </svg>
+</figure>
+
+<style>
+  .diag { margin: 0; }
+  .diag svg { width: 100%; height: auto; display: block; background: var(--c-white); }
+  .node rect { fill: var(--c-white); stroke: var(--c-black); stroke-width: 3; }
+  .node--accent rect { fill: var(--accent, var(--c-gold)); }
+  .node text { fill: var(--c-black); text-anchor: middle; font-family: var(--font-display); }
+  .t-md { font-size: 24px; }
+  .t-reg { font-size: 19px; }
+  .t-sm {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 14px;
+    fill: color-mix(in srgb, var(--c-black) 72%, transparent);
+    text-anchor: middle;
+  }
+  .t-xs {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 12px;
+    fill: color-mix(in srgb, var(--c-black) 68%, transparent);
+    text-anchor: middle;
+  }
+  .grp {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    fill: color-mix(in srgb, var(--c-black) 55%, transparent);
+    text-anchor: start;
+  }
+  .edge { fill: none; stroke: var(--c-black); stroke-width: 2.5; }
+  .edge--dash { stroke-dasharray: 7 6; opacity: 0.75; }
+  .e-lbl {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 14px;
+    fill: var(--c-black);
+    text-anchor: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+</style>
