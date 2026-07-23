@@ -386,6 +386,10 @@ const pad = (n: number) => String(n).padStart(2, "0");
     }
     .card__count { display: none; }
 
+    /* the divider line crowds "VIEW WORK" on the narrow mobile button — drop it
+       and let the arrow sit with a little breathing room instead */
+    .card__arrow { border-left: none; padding-left: 0.55rem; }
+
     /* near-square image pane (fits the square renders better than a wide strip) */
     .card__preview { min-height: 340px; order: 2; }
     .preview__img,
