@@ -139,30 +139,31 @@ const vBars = ramp(6);
       }
     }
 
-    document
-      .querySelectorAll<HTMLAnchorElement>("[data-nav-link], .logo-link, [data-work-cta]")
-      .forEach((a) => {
-        a.addEventListener("click", (e) => {
-          if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-          const href = a.getAttribute("href");
-          if (!href) return;
-          let dest: string;
-          try {
-            dest = new URL(href, location.href).pathname;
-          } catch {
-            return;
-          }
-          const variant = variantFor(dest);
-          if (!variant) return;
-          e.preventDefault();
-          // "VIEW WORK" carries the card's accent so the curtain wipes in colour
-          setAccent(a.hasAttribute("data-work-cta") ? a.getAttribute("data-accent") : null);
-          sessionStorage.setItem(KEY, variant);
-          cover(variant).then(() => {
-            window.location.href = href;
-          });
-        });
+    // Delegated so it keeps working after the case-switcher swaps the rail in place.
+    document.addEventListener("click", (e) => {
+      const a = (e.target as Element | null)?.closest<HTMLAnchorElement>(
+        "[data-nav-link], .logo-link, [data-work-cta]",
+      );
+      if (!a) return;
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      const href = a.getAttribute("href");
+      if (!href) return;
+      let dest: string;
+      try {
+        dest = new URL(href, location.href).pathname;
+      } catch {
+        return;
+      }
+      const variant = variantFor(dest);
+      if (!variant) return;
+      e.preventDefault();
+      // "VIEW WORK" carries the card's accent so the curtain wipes in colour
+      setAccent(a.hasAttribute("data-work-cta") ? a.getAttribute("data-accent") : null);
+      sessionStorage.setItem(KEY, variant);
+      cover(variant).then(() => {
+        window.location.href = href;
       });
+    });
 
     // Arrival: replay the matching reveal (page arrived already covered via the
     // inline head script).
