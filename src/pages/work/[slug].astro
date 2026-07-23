@@ -3,16 +3,42 @@ import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
 import Footer from "../../components/Footer.astro";
 import EscrowDiagram from "../../components/work/EscrowDiagram.astro";
+import SeedVaultDiagram from "../../components/work/SeedVaultDiagram.astro";
+import SeedVaultContracts from "../../components/work/SeedVaultContracts.astro";
+import VellosCurveDiagram from "../../components/work/VellosCurveDiagram.astro";
+import VellosPipelineDiagram from "../../components/work/VellosPipelineDiagram.astro";
+import CryptowareStats from "../../components/work/CryptowareStats.astro";
+import CryptowareLaunchDiagram from "../../components/work/CryptowareLaunchDiagram.astro";
+import CryptowareMarketDiagram from "../../components/work/CryptowareMarketDiagram.astro";
+import STCStackDiagram from "../../components/work/STCStackDiagram.astro";
+import STCIdentityDiagram from "../../components/work/STCIdentityDiagram.astro";
 import { caseStudies } from "../../data/caseStudies";
+import { projects } from "../../data/projects";
 
 export async function getStaticPaths() {
-  return Object.values(caseStudies).map((cs) => ({
-    params: { slug: cs.slug },
-    props: { cs },
-  }));
+  // Projects that have a case-study page, in carousel order. Grows to 6 on its
+  // own as more case studies are added — the switcher below is fully data-driven.
+  const ring = projects
+    .map((p) => p.slug)
+    .filter((s): s is string => Boolean(s && caseStudies[s]));
+  const n = ring.length;
+
+  return Object.values(caseStudies).map((cs) => {
+    const i = ring.indexOf(cs.slug);
+    const prevSlug = ring[(i - 1 + n) % n];
+    const nextSlug = ring[(i + 1) % n];
+    return {
+      params: { slug: cs.slug },
+      props: {
+        cs,
+        prev: { slug: prevSlug, client: caseStudies[prevSlug].client },
+        next: { slug: nextSlug, client: caseStudies[nextSlug].client },
+      },
+    };
+  });
 }
 
-const { cs } = Astro.props;
+const { cs, prev, next } = Astro.props;
 const primary = cs.links.find((l) => l.kind === "primary");
 const rest = cs.links.filter((l) => l.kind !== "primary");
 ---
@@ -83,6 +109,26 @@ const rest = cs.links.filter((l) => l.kind !== "primary");
             }
           </div>
         </div>
+
+        <nav class="cs__switch" aria-label="Switch project">
+          <span class="cs__switch-eyebrow">More work</span>
+          <a
+            class="cs__switch-arrow cs__switch-arrow--prev"
+            href={`/work/${prev.slug}`}
+            data-case-switch="prev"
+            aria-label={`Previous project: ${prev.client}`}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 L7 12 L15 20" /></svg>
+          </a>
+          <a
+            class="cs__switch-arrow cs__switch-arrow--next"
+            href={`/work/${next.slug}`}
+            data-case-switch="next"
+            aria-label={`Next project: ${next.client}`}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 L17 12 L9 20" /></svg>
+          </a>
+        </nav>
       </div>
     </aside>
 
@@ -118,7 +164,16 @@ const rest = cs.links.filter((l) => l.kind !== "primary");
         {
           cs.gallery.map((m) => (
             <figure class={`cs__block cs__block--${m.frame ?? "none"}`}>
-              {m.kind === "diagram" && <EscrowDiagram />}
+              {m.kind === "diagram" && m.diagram === "escrow" && <EscrowDiagram />}
+              {m.kind === "diagram" && m.diagram === "seedvault-compliance" && <SeedVaultDiagram />}
+              {m.kind === "diagram" && m.diagram === "seedvault-contracts" && <SeedVaultContracts />}
+              {m.kind === "diagram" && m.diagram === "vellos-curve" && <VellosCurveDiagram />}
+              {m.kind === "diagram" && m.diagram === "vellos-pipeline" && <VellosPipelineDiagram />}
+              {m.kind === "diagram" && m.diagram === "cryptoware-stats" && <CryptowareStats />}
+              {m.kind === "diagram" && m.diagram === "cryptoware-launch" && <CryptowareLaunchDiagram />}
+              {m.kind === "diagram" && m.diagram === "cryptoware-market" && <CryptowareMarketDiagram />}
+              {m.kind === "diagram" && m.diagram === "stc-stack" && <STCStackDiagram />}
+              {m.kind === "diagram" && m.diagram === "stc-identity" && <STCIdentityDiagram />}
 
               {m.kind === "image" && m.src && (
                 <div class="cs__media">
@@ -159,6 +214,11 @@ const rest = cs.links.filter((l) => l.kind !== "primary");
   <Footer />
 </Layout>
 
+<script>
+  import { initCaseSwitcher } from "../../scripts/work/caseSwitcher";
+  initCaseSwitcher();
+</script>
+
 <style>
   .cs {
     position: relative;
@@ -179,6 +239,7 @@ const rest = cs.links.filter((l) => l.kind !== "primary");
     flex-direction: column;
     min-height: calc(100vh - var(--header-h));
     border-right: var(--bw) solid var(--c-black);
+    view-transition-name: cs-rail;
   }
   .cs__wordmark {
     background: var(--c-black);
@@ -192,11 +253,12 @@ const rest = cs.links.filter((l) => l.kind !== "primary");
     text-overflow: clip;
   }
   .cs__info {
+    --info-pad-y: clamp(1.2rem, 2.2vw, 2rem);
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
-    padding: clamp(1.2rem, 2.2vw, 2rem) var(--gutter);
+    padding: var(--info-pad-y) var(--gutter);
     /* the accent "square" — orange for BTC BACKED, black border via the rail */
     background: var(--accent);
     color: var(--c-black);
@@ -266,10 +328,9 @@ const rest = cs.links.filter((l) => l.kind !== "primary");
     color: color-mix(in srgb, var(--c-black) 78%, transparent);
   }
 
-  /* ── CTAs ────────────────────────────────────────────────── */
+  /* ── CTAs (now sit near the top, right under the tags/blurb) ── */
   .cs__cta-group {
-    margin-top: auto;
-    padding-top: 1.4rem;
+    padding-top: 1.2rem;
     display: flex;
     flex-direction: column;
     gap: 0.7rem;
@@ -329,11 +390,65 @@ const rest = cs.links.filter((l) => l.kind !== "primary");
     cursor: default;
   }
 
+  /* ── project switcher: pinned to the rail bottom, home-carousel arrows that
+     hug the rail's left/right edges (clipped to semicircles by the band). ─── */
+  .cs__switch {
+    margin: auto calc(-1 * var(--gutter)) calc(-1 * var(--info-pad-y));
+    position: relative;
+    overflow: hidden;
+    min-height: clamp(92px, 9vw, 120px);
+    display: grid;
+    place-items: center;
+  }
+  .cs__switch-eyebrow {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.66rem;
+    color: color-mix(in srgb, var(--c-black) 58%, transparent);
+  }
+  .cs__switch-arrow {
+    --d: clamp(68px, 6.5vw, 92px);
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: var(--d);
+    height: var(--d);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--c-black);
+    color: var(--c-white);
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  }
+  .cs__switch-arrow--prev { left: calc(-0.2 * var(--d)); }
+  .cs__switch-arrow--next { right: calc(-0.2 * var(--d)); }
+  .cs__switch-arrow:hover,
+  .cs__switch-arrow:focus-visible {
+    background: var(--c-gold);
+    color: var(--c-black);
+    outline: none;
+  }
+  .cs__switch-arrow:active { transform: translateY(-50%) scale(0.94); }
+  .cs__switch-arrow svg {
+    width: 32%;
+    height: auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .cs__switch-arrow--prev svg { transform: translateX(9%); }
+  .cs__switch-arrow--next svg { transform: translateX(-9%); }
+
   /* ── content column ──────────────────────────────────────── */
   .cs__content {
     min-width: 0;
     padding: clamp(1.6rem, 3vw, 3rem) var(--gutter) clamp(4rem, 8vh, 7rem);
     color: var(--c-white);
+    view-transition-name: cs-content;
   }
   .cs__intro {
     max-width: 60ch;
@@ -425,8 +540,14 @@ const rest = cs.links.filter((l) => l.kind !== "primary");
   }
   .cs__block { margin: 0; }
   .cs__media,
-  .cs__slot,
-  .diag {
+  .cs__slot {
+    border: var(--bw) solid var(--c-black);
+    box-shadow: 8px 8px 0 0 rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+  }
+  /* diagrams are rendered by child components, so a scoped `.diag` rule never
+     reaches them — target them globally to give them the same framed shadow. */
+  .cs__block :global(.diag) {
     border: var(--bw) solid var(--c-black);
     box-shadow: 8px 8px 0 0 rgba(0, 0, 0, 0.5);
     overflow: hidden;
@@ -502,6 +623,28 @@ const rest = cs.links.filter((l) => l.kind !== "primary");
     }
     .cs__cols { grid-template-columns: 1fr; }
     .cs__wordmark { white-space: normal; }
+
+    /* wide diagrams scroll horizontally at a readable size rather than shrinking
+       into illegibility; the framed border stays put while the SVG scrolls. */
+    .cs__block :global(.diag) { overflow-x: auto; overflow-y: hidden; }
+    .cs__block :global(.diag svg) { min-width: 560px; }
+
+    .cs__switch { min-height: clamp(84px, 22vw, 110px); }
+  }
+
+  /* phone */
+  @media (max-width: 560px) {
+    .cs__content {
+      padding-left: clamp(1rem, 4.5vw, 1.8rem);
+      padding-right: clamp(1rem, 4.5vw, 1.8rem);
+    }
+    .cs__title { font-size: clamp(1.6rem, 8vw, 2.3rem); }
+    .cs__overview { font-size: 1.02rem; }
+    .cs__gallery { gap: 1.5rem; }
+    .cs__block figcaption { font-size: 0.76rem; }
+    .cs__block :global(.diag svg) { min-width: 520px; }
+    .cs__wordmark { font-size: clamp(2rem, 11vw, 3rem); }
+    .cs__client { font-size: clamp(1.7rem, 9vw, 2.4rem); }
   }
 
   @media (prefers-reduced-motion: reduce) {
