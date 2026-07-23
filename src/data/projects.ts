@@ -19,19 +19,6 @@ export interface Project {
 export const projects: Project[] = [
   {
     index: 1,
-    client: "SEEDVAULT",
-    role: "RWA · Smart Contracts",
-    tags: ["RWA", "ERC-3643", "SOLIDITY"],
-    year: "2026",
-    blurb:
-      "ERC-3643 security-token platform for fractional ownership of cannabis-seed reserves — ONCHAINID KYC passports, modular compliance and a NAV oracle, deployed on Base.",
-    image: "/work-assets/projects/seedvault.webp",
-    depth: "/work-assets/projects/seedvault-depth.webp", // 2.5D parallax + idle drift
-    href: null,
-    accent: "#5b8ad4", // steel-blue vial + electric-blue glow (sampled from image)
-  },
-  {
-    index: 2,
     client: "BTC BACKED",
     role: "Senior Software Engineer",
     tags: ["BITCOIN", "PSBT", "LENDING"],
@@ -45,7 +32,34 @@ export const projects: Project[] = [
     accent: "#f7931a",
   },
   {
+    index: 2,
+    client: "SEEDVAULT",
+    role: "RWA · Smart Contracts",
+    tags: ["RWA", "ERC-3643", "SOLIDITY"],
+    year: "2026",
+    blurb:
+      "ERC-3643 security-token platform for fractional ownership of cannabis-seed reserves — ONCHAINID KYC passports, modular compliance and a NAV oracle, deployed on Base.",
+    image: "/work-assets/projects/seedvault.webp",
+    depth: "/work-assets/projects/seedvault-depth.webp", // 2.5D parallax + idle drift
+    href: null,
+    slug: "seedvault",
+    accent: "#5b8ad4", // steel-blue vial + electric-blue glow (sampled from image)
+  },
+  {
     index: 3,
+    client: "STC",
+    role: "Senior Blockchain Dev",
+    tags: ["METAVERSE", "MULTI-CHAIN"],
+    year: "2023–25",
+    blurb:
+      "A metaverse for the Saudi Ministry of Tourism — multi-chain Solidity contracts, a React/Next.js UI, a Node.js/TsED backend and Dockerized DevOps.",
+    image: "/work-assets/projects/stc.webp",
+    href: null,
+    slug: "stc",
+    accent: "#7b4fd1", // purple phone/SIM + lavender field (sampled from image)
+  },
+  {
+    index: 4,
     client: "VELLOS",
     role: "Lead Web3 Developer",
     tags: ["DEFI", "AMM", "SOLIDITY"],
@@ -55,10 +69,11 @@ export const projects: Project[] = [
     image: "/work-assets/projects/vellos.webp",
     depth: "/work-assets/projects/vellos-depth.webp",
     href: null,
+    slug: "vellos",
     accent: "#3fb56a", // green rocket-flame (the hero element of the image)
   },
   {
-    index: 4,
+    index: 5,
     client: "CRYPTOWARE",
     role: "Web3 Full-Stack",
     tags: ["NFT", "DEFI", "LAUNCHPAD"],
@@ -68,10 +83,11 @@ export const projects: Project[] = [
     image: "/work-assets/projects/cryptoware.webp",
     depth: "/work-assets/projects/cryptoware-depth.webp",
     href: null,
+    slug: "cryptoware",
     accent: "#12a5cf", // cyan chain-glow on navy (sampled from image)
   },
   {
-    index: 5,
+    index: 6,
     client: "SPARTAN",
     role: "Lead Contracts & Frontend",
     tags: ["NFT", "TICKETING"],
@@ -82,18 +98,6 @@ export const projects: Project[] = [
     depth: "/work-assets/projects/spartan-depth.webp",
     href: null,
     accent: "#bb342f", // deep crimson helmet-crest on black (sampled from image)
-  },
-  {
-    index: 6,
-    client: "STC",
-    role: "Senior Blockchain Dev",
-    tags: ["METAVERSE", "MULTI-CHAIN"],
-    year: "2023–25",
-    blurb:
-      "A metaverse for the Saudi Ministry of Tourism — multi-chain Solidity contracts, a React/Next.js UI, a Node.js/TsED backend and Dockerized DevOps.",
-    image: "/work-assets/projects/stc.webp",
-    href: null,
-    accent: "#7b4fd1", // purple phone/SIM + lavender field (sampled from image)
   },
 ];
 
