@@ -103,6 +103,35 @@ ol {
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ── work↔work switcher (same-document View Transition; SAM-14) ───────────────
+   The rail slides in its new accent colour and the content lifts in. Direction
+   comes from the html.cs-dir-* class the controller sets (caseSwitcher.ts); with
+   no class (back/forward) it falls back to a clean cross-fade. */
+::view-transition-group(cs-rail),
+::view-transition-group(cs-content),
+::view-transition-old(cs-rail),
+::view-transition-new(cs-rail),
+::view-transition-old(cs-content),
+::view-transition-new(cs-content) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* rail — the colour travels: old slides out, new slides in (directional) */
+html.cs-dir-next::view-transition-old(cs-rail) { animation-name: cs-slide-out-left; }
+html.cs-dir-next::view-transition-new(cs-rail) { animation-name: cs-slide-in-right; }
+html.cs-dir-prev::view-transition-old(cs-rail) { animation-name: cs-slide-out-right; }
+html.cs-dir-prev::view-transition-new(cs-rail) { animation-name: cs-slide-in-left; }
+/* content — lifts in, same both directions */
+::view-transition-old(cs-content) { animation-name: cs-lift-out; }
+::view-transition-new(cs-content) { animation-name: cs-lift-in; }
+
+@keyframes cs-slide-out-left { to { transform: translateX(-64px); opacity: 0; } }
+@keyframes cs-slide-in-right { from { transform: translateX(64px); opacity: 0; } }
+@keyframes cs-slide-out-right { to { transform: translateX(64px); opacity: 0; } }
+@keyframes cs-slide-in-left { from { transform: translateX(-64px); opacity: 0; } }
+@keyframes cs-lift-out { to { transform: translateY(26px); opacity: 0; } }
+@keyframes cs-lift-in { from { transform: translateY(26px); opacity: 0; } }
+
 /* ── page-transition curtain (SAM-16) ─────────────────────────────────────
    Thick horizontal bars, page-blue → darker navy, that wipe in from the right
    (chained top→bottom) to cover everything BELOW the navbar, then retract to
