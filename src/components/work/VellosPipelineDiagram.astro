@@ -1,0 +1,107 @@
+---
+// Vellos — the live-price pipeline. The bonding-curve contract emits buy/sell
+// events; an indexer aggregates them into OHLC candles, a WebSocket streams them
+// to a TradingView chart, and a Chainlink ETH/USD oracle supplies the USD market
+// cap (for the graduation threshold + the UI). Colours inherit the page --accent.
+---
+
+<figure class="diag">
+  <svg viewBox="0 0 960 380" role="img" aria-label="The bonding-curve contract emits buy/sell events; an indexer aggregates them into OHLC candles; a WebSocket streams them to a TradingView chart; a Chainlink ETH/USD oracle supplies the USD market cap.">
+    <defs>
+      <marker id="vpah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#000" />
+      </marker>
+    </defs>
+
+    <!-- top pipeline -->
+    <g class="node node--accent">
+      <rect x="30" y="50" width="150" height="72" rx="4" />
+      <text class="t-md" x="105" y="82">BONDING CURVE</text>
+      <text class="t-sm" x="105" y="101">emits Buy / Sell</text>
+    </g>
+    <g class="node">
+      <rect x="215" y="50" width="150" height="72" rx="4" />
+      <text class="t-md" x="290" y="82">INDEXER</text>
+      <text class="t-sm" x="290" y="101">viem · Ponder</text>
+    </g>
+    <g class="node">
+      <rect x="400" y="50" width="150" height="72" rx="4" />
+      <text class="t-md" x="475" y="82">OHLC CANDLES</text>
+      <text class="t-sm" x="475" y="101">Timescale / Redis</text>
+    </g>
+    <g class="node">
+      <rect x="585" y="50" width="150" height="72" rx="4" />
+      <text class="t-md" x="660" y="82">WEBSOCKET</text>
+      <text class="t-sm" x="660" y="101">live stream</text>
+    </g>
+    <g class="node">
+      <rect x="770" y="50" width="165" height="72" rx="4" />
+      <text class="t-md" x="852" y="82">TRADINGVIEW</text>
+      <text class="t-sm" x="852" y="101">candlestick chart</text>
+    </g>
+
+    <path class="edge" d="M180 86 L211 86" marker-end="url(#vpah)" />
+    <path class="edge" d="M365 86 L396 86" marker-end="url(#vpah)" />
+    <path class="edge" d="M550 86 L581 86" marker-end="url(#vpah)" />
+    <path class="edge" d="M735 86 L766 86" marker-end="url(#vpah)" />
+    <text class="e-lbl" x="197" y="40">events</text>
+    <text class="e-lbl" x="382" y="40">aggregate</text>
+    <text class="e-lbl" x="567" y="40">push</text>
+    <text class="e-lbl" x="752" y="40">render</text>
+
+    <!-- bottom row -->
+    <g class="node">
+      <rect x="30" y="248" width="150" height="72" rx="4" />
+      <text class="t-md" x="105" y="280">WALLET</text>
+      <text class="t-sm" x="105" y="299">wagmi · viem</text>
+    </g>
+    <g class="node">
+      <rect x="392" y="248" width="180" height="72" rx="4" />
+      <text class="t-md" x="482" y="280">CHAINLINK</text>
+      <text class="t-sm" x="482" y="299">ETH / USD oracle</text>
+    </g>
+    <g class="node">
+      <rect x="616" y="248" width="176" height="72" rx="4" />
+      <text class="t-md" x="704" y="280">USD MARKET CAP</text>
+      <text class="t-sm" x="704" y="299">graduation + UI</text>
+    </g>
+
+    <!-- wallet trades into the curve -->
+    <path class="edge edge--dash" d="M105 248 L105 124" marker-end="url(#vpah)" />
+    <text class="e-lbl e-lbl--start" x="118" y="190">buy / sell</text>
+    <!-- chainlink → usd mcap -->
+    <path class="edge" d="M572 284 L612 284" marker-end="url(#vpah)" />
+    <!-- usd mcap feeds the chart display -->
+    <path class="edge edge--dash" d="M760 248 L845 124" marker-end="url(#vpah)" />
+    <text class="e-lbl e-lbl--end" x="812" y="196">USD mcap</text>
+  </svg>
+</figure>
+
+<style>
+  .diag { margin: 0; }
+  .diag svg { width: 100%; height: auto; display: block; background: var(--c-white); }
+  .node rect { fill: var(--c-white); stroke: var(--c-black); stroke-width: 3; }
+  .node--accent rect { fill: var(--accent, var(--c-gold)); }
+  .node text { fill: var(--c-black); text-anchor: middle; font-family: var(--font-display); }
+  .t-md { font-size: 21px; }
+  .t-sm {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 13px;
+    fill: color-mix(in srgb, var(--c-black) 72%, transparent);
+    text-anchor: middle;
+  }
+  .edge { fill: none; stroke: var(--c-black); stroke-width: 2.5; }
+  .edge--dash { stroke-dasharray: 6 5; opacity: 0.7; }
+  .e-lbl {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 13px;
+    fill: var(--c-black);
+    text-anchor: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .e-lbl--start { text-anchor: start; }
+  .e-lbl--end { text-anchor: end; }
+</style>
