@@ -1,0 +1,102 @@
+---
+// STC — making web3 invisible for tourists. Email/social login → a non-custodial
+// embedded wallet (no seed phrase) → an ERC-4337 smart account with a paymaster
+// (gasless) → mints a soulbound (ERC-5192) passport that is also an ERC-6551
+// account holding POAP stamps, deployed at the same CREATE2 address on every
+// chain. Grounded in the research; colours inherit the page --accent.
+---
+
+<figure class="diag">
+  <svg viewBox="0 0 980 560" role="img" aria-label="A tourist logs in with email/social, gets a non-custodial embedded wallet and an ERC-4337 smart account with a paymaster, and mints a soulbound ERC-5192 passport that is also an ERC-6551 account holding POAPs, deployed at the same CREATE2 address across chains.">
+    <defs>
+      <marker id="siah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#000" />
+      </marker>
+    </defs>
+
+    <!-- onboarding row -->
+    <g class="node">
+      <rect x="44" y="44" width="208" height="84" rx="4" />
+      <text class="t-md" x="148" y="84">TOURIST</text>
+      <text class="t-sm" x="148" y="105">email / social login</text>
+    </g>
+    <g class="node">
+      <rect x="300" y="44" width="244" height="84" rx="4" />
+      <text class="t-md" x="422" y="84">EMBEDDED WALLET</text>
+      <text class="t-sm" x="422" y="105">non-custodial · no seed</text>
+    </g>
+    <g class="node node--accent">
+      <rect x="592" y="44" width="344" height="84" rx="4" />
+      <text class="t-md" x="764" y="84">ERC-4337 SMART ACCOUNT</text>
+      <text class="t-sm" x="764" y="105">+ paymaster · gasless</text>
+    </g>
+    <path class="edge" d="M252 86 L296 86" marker-end="url(#siah)" />
+    <text class="e-lbl" x="274" y="32">login</text>
+    <path class="edge" d="M544 86 L588 86" marker-end="url(#siah)" />
+    <text class="e-lbl" x="566" y="32">MPC key</text>
+
+    <!-- passport -->
+    <g class="node node--accent">
+      <rect x="330" y="220" width="320" height="126" rx="4" />
+      <text class="t-md" x="490" y="256">TOURISM PASSPORT</text>
+      <text class="t-sm" x="490" y="280">soulbound · ERC-5192</text>
+      <text class="t-xs" x="490" y="302">= ERC-6551 token-bound account</text>
+      <text class="t-xs" x="490" y="323">holds POAP stamps · dynamic (4906)</text>
+    </g>
+    <path class="edge" d="M760 130 L556 218" marker-end="url(#siah)" />
+    <text class="e-lbl" x="702" y="168">mints · zero gas</text>
+
+    <!-- multi-chain -->
+    <g class="node">
+      <rect x="330" y="424" width="320" height="96" rx="4" />
+      <text class="t-md" x="490" y="460">SAME ADDRESS · EVERY CHAIN</text>
+      <text class="t-sm" x="490" y="484">CREATE2 deterministic</text>
+      <text class="t-xs" x="490" y="505">cross-chain only where needed · rate-limited</text>
+    </g>
+    <path class="edge" d="M490 346 L490 422" marker-end="url(#siah)" />
+    <text class="e-lbl e-lbl--start" x="502" y="390">deploy</text>
+
+    <text class="note" x="490" y="548">The tourist never sees a seed phrase, a gas token, or which chain they're on.</text>
+  </svg>
+</figure>
+
+<style>
+  .diag { margin: 0; }
+  .diag svg { width: 100%; height: auto; display: block; background: var(--c-white); }
+  .node rect { fill: var(--c-white); stroke: var(--c-black); stroke-width: 3; }
+  .node--accent rect { fill: var(--accent, var(--c-gold)); }
+  .node text { fill: var(--c-black); text-anchor: middle; font-family: var(--font-display); }
+  .t-md { font-size: 23px; }
+  .t-sm {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 14px;
+    fill: color-mix(in srgb, var(--c-black) 72%, transparent);
+    text-anchor: middle;
+  }
+  .t-xs {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 12.5px;
+    fill: color-mix(in srgb, var(--c-black) 66%, transparent);
+    text-anchor: middle;
+  }
+  .edge { fill: none; stroke: var(--c-black); stroke-width: 2.5; }
+  .e-lbl {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 13px;
+    fill: var(--c-black);
+    text-anchor: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .e-lbl--start { text-anchor: start; }
+  .note {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 13.5px;
+    fill: color-mix(in srgb, var(--c-black) 64%, transparent);
+    text-anchor: middle;
+  }
+</style>

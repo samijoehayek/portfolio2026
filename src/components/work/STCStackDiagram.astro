@@ -1,0 +1,115 @@
+---
+// STC — how a photoreal, multi-user 3D world runs in a browser tab. A React/R3F
+// client (instancing + LOD to stay under the draw-call budget) fed by a CDN of
+// Draco/KTX2-compressed glTF assets, a Colyseus presence server with interest
+// management, and a Ts.ED backend behind Nginx/Docker. Grounded in the research.
+---
+
+<figure class="diag">
+  <svg viewBox="0 0 980 500" role="img" aria-label="A React/R3F browser 3D client with instancing and LOD, fed by a CDN of Draco/KTX2-compressed glTF assets, a Colyseus presence server with interest management, and a Ts.ED backend behind Nginx and Docker.">
+    <defs>
+      <marker id="ssah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#000" />
+      </marker>
+    </defs>
+
+    <!-- client -->
+    <g class="node node--accent">
+      <rect x="340" y="40" width="300" height="96" rx="4" />
+      <text class="t-md" x="490" y="78">BROWSER 3D CLIENT</text>
+      <text class="t-sm" x="490" y="100">React · Three.js / R3F</text>
+      <text class="t-sm" x="490" y="120">instancing · LOD · 60fps budget</text>
+    </g>
+
+    <!-- subsystems -->
+    <g class="node">
+      <rect x="44" y="210" width="270" height="124" rx="4" />
+      <text class="t-md" x="179" y="246">3D ASSETS · CDN</text>
+      <text class="t-sm" x="179" y="270">glTF / GLB</text>
+      <text class="t-xs" x="179" y="292">Draco — geometry</text>
+      <text class="t-xs" x="179" y="313">KTX2 — GPU textures</text>
+    </g>
+    <g class="node node--accent">
+      <rect x="355" y="210" width="270" height="124" rx="4" />
+      <text class="t-md" x="490" y="246">PRESENCE SERVER</text>
+      <text class="t-sm" x="490" y="270">Colyseus · rooms</text>
+      <text class="t-xs" x="490" y="292">interest mgmt (near-you)</text>
+      <text class="t-xs" x="490" y="313">prediction · interpolation</text>
+    </g>
+    <g class="node">
+      <rect x="666" y="210" width="270" height="124" rx="4" />
+      <text class="t-md" x="801" y="246">Ts.ED BACKEND</text>
+      <text class="t-sm" x="801" y="270">APIs · DI · OpenAPI</text>
+      <text class="t-xs" x="801" y="292">Docker · Nginx</text>
+      <text class="t-xs" x="801" y="313">Redis pub/sub scale</text>
+    </g>
+
+    <path class="edge" d="M424 138 L228 208" marker-end="url(#ssah)" />
+    <text class="e-lbl" x="300" y="165">assets</text>
+    <path class="edge" d="M490 138 L490 208" marker-end="url(#ssah)" />
+    <text class="e-lbl e-lbl--start" x="500" y="178">realtime WS</text>
+    <path class="edge" d="M556 138 L792 208" marker-end="url(#ssah)" />
+    <text class="e-lbl" x="690" y="165">REST</text>
+
+    <!-- compression callout -->
+    <g class="callout-box">
+      <rect x="44" y="392" width="892" height="92" rx="4" />
+      <text class="callout-eyebrow" x="68" y="426">◆ THE COMPRESSION PAIR</text>
+      <text class="callout" x="68" y="452">Draco shrinks the download · KTX2 shrinks the GPU memory</text>
+      <text class="callout callout--dim" x="68" y="472">a photoreal national landscape that loads — and holds 60fps — on a tourist's phone</text>
+    </g>
+  </svg>
+</figure>
+
+<style>
+  .diag { margin: 0; }
+  .diag svg { width: 100%; height: auto; display: block; background: var(--c-white); }
+  .node rect { fill: var(--c-white); stroke: var(--c-black); stroke-width: 3; }
+  .node--accent rect { fill: var(--accent, var(--c-gold)); }
+  .node text { fill: var(--c-black); text-anchor: middle; font-family: var(--font-display); }
+  .t-md { font-size: 24px; }
+  .t-sm {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 14px;
+    fill: color-mix(in srgb, var(--c-black) 72%, transparent);
+    text-anchor: middle;
+  }
+  .t-xs {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 12.5px;
+    fill: color-mix(in srgb, var(--c-black) 66%, transparent);
+    text-anchor: middle;
+  }
+  .edge { fill: none; stroke: var(--c-black); stroke-width: 2.5; }
+  .e-lbl {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 13px;
+    fill: var(--c-black);
+    text-anchor: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .e-lbl--start { text-anchor: start; }
+  .callout-box rect {
+    fill: color-mix(in srgb, var(--accent) 14%, var(--c-white));
+    stroke: var(--c-black);
+    stroke-width: 3;
+  }
+  .callout-eyebrow {
+    font-family: var(--font-display);
+    font-size: 16px;
+    fill: color-mix(in srgb, var(--accent) 55%, #000);
+    text-anchor: start;
+  }
+  .callout {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 15px;
+    fill: var(--c-black);
+    text-anchor: start;
+  }
+  .callout--dim { font-weight: 500; font-size: 13px; fill: color-mix(in srgb, var(--c-black) 66%, transparent); }
+</style>
