@@ -1,0 +1,117 @@
+---
+// Cryptoware — the NFT launch engine. A launchpad factory clones a fresh ERC-721A
+// collection per launch (EIP-1167 + CREATE2, Initializable); the collection runs a
+// phased Merkle/signature-gated mint, a provenance + Chainlink VRF reveal, and
+// EIP-2981/ERC-721C royalties. Grounded in the research; colours inherit --accent.
+---
+
+<figure class="diag">
+  <svg viewBox="0 0 980 560" role="img" aria-label="A launchpad factory clones an ERC-721A collection per launch; the collection runs a phased Merkle/signature-gated mint, a provenance + Chainlink VRF reveal, and EIP-2981/ERC-721C royalties.">
+    <defs>
+      <marker id="clah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#000" />
+      </marker>
+    </defs>
+
+    <!-- top row -->
+    <g class="node">
+      <rect x="60" y="44" width="300" height="88" rx="4" />
+      <text class="t-md" x="210" y="84">LAUNCHPAD FACTORY</text>
+      <text class="t-sm" x="210" y="108">EIP-1167 clones · CREATE2</text>
+    </g>
+    <g class="node node--accent">
+      <rect x="620" y="44" width="300" height="88" rx="4" />
+      <text class="t-md" x="770" y="84">NFT COLLECTION</text>
+      <text class="t-sm" x="770" y="108">ERC-721A · one per launch</text>
+    </g>
+    <path class="edge" d="M360 88 L616 88" marker-end="url(#clah)" />
+    <text class="e-lbl" x="488" y="74">clone + initialize()</text>
+
+    <!-- lifecycle row -->
+    <g class="node">
+      <rect x="44" y="250" width="286" height="134" rx="4" />
+      <text class="t-md" x="187" y="286">① PHASED MINT</text>
+      <text class="t-sm" x="187" y="310">Closed → Allowlist → Public</text>
+      <text class="t-xs" x="187" y="332">Merkle root · EIP-712 sig</text>
+      <text class="t-xs" x="187" y="352">per-wallet + supply caps</text>
+    </g>
+    <g class="node node--accent">
+      <rect x="347" y="250" width="286" height="134" rx="4" />
+      <text class="t-md" x="490" y="286">② FAIR REVEAL</text>
+      <text class="t-sm" x="490" y="310">provenance hash committed</text>
+      <text class="t-xs" x="490" y="332">Chainlink VRF → start index</text>
+      <text class="t-xs" x="490" y="352">IPFS metadata</text>
+    </g>
+    <g class="node">
+      <rect x="650" y="250" width="286" height="134" rx="4" />
+      <text class="t-md" x="793" y="286">③ ROYALTIES</text>
+      <text class="t-sm" x="793" y="310">EIP-2981 → ERC-721C</text>
+      <text class="t-xs" x="793" y="332">creator-enforced</text>
+    </g>
+
+    <path class="edge" d="M700 132 L250 248" marker-end="url(#clah)" />
+    <text class="e-lbl" x="640" y="180">per-launch lifecycle</text>
+    <path class="edge" d="M330 317 L343 317" marker-end="url(#clah)" />
+    <path class="edge" d="M633 317 L646 317" marker-end="url(#clah)" />
+
+    <!-- ERC-721A callout (outside .node so text-anchor:start + custom fills apply) -->
+    <g class="callout-box">
+      <rect x="44" y="428" width="892" height="94" rx="4" />
+      <text class="callout-eyebrow" x="68" y="462">◆ THE ERC-721A TRICK</text>
+      <text class="callout" x="68" y="490">owner written once per batch, resolved by a back-scan on read → ~86% less mint gas</text>
+      <text class="callout callout--dim" x="68" y="510">the honest trade-off: transfers cost more, so it wins when buyers mint many and hold</text>
+    </g>
+  </svg>
+</figure>
+
+<style>
+  .diag { margin: 0; }
+  .diag svg { width: 100%; height: auto; display: block; background: var(--c-white); }
+  .node rect { fill: var(--c-white); stroke: var(--c-black); stroke-width: 3; }
+  .node--accent rect { fill: var(--accent, var(--c-gold)); }
+  .node text { fill: var(--c-black); text-anchor: middle; font-family: var(--font-display); }
+  .callout-box rect {
+    fill: color-mix(in srgb, var(--accent) 14%, var(--c-white));
+    stroke: var(--c-black);
+    stroke-width: 3;
+  }
+  .t-md { font-size: 24px; }
+  .t-sm {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 14px;
+    fill: color-mix(in srgb, var(--c-black) 72%, transparent);
+    text-anchor: middle;
+  }
+  .t-xs {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 12.5px;
+    fill: color-mix(in srgb, var(--c-black) 66%, transparent);
+    text-anchor: middle;
+  }
+  .edge { fill: none; stroke: var(--c-black); stroke-width: 2.5; }
+  .e-lbl {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 13px;
+    fill: var(--c-black);
+    text-anchor: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .callout-eyebrow {
+    font-family: var(--font-display);
+    font-size: 16px;
+    fill: color-mix(in srgb, var(--accent) 60%, #000);
+    text-anchor: start;
+  }
+  .callout {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 15px;
+    fill: var(--c-black);
+    text-anchor: start;
+  }
+  .callout--dim { font-weight: 500; font-size: 13px; fill: color-mix(in srgb, var(--c-black) 66%, transparent); }
+</style>

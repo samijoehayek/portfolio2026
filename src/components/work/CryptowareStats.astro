@@ -1,0 +1,77 @@
+---
+// Cryptoware — the commercial impact across the NFT / launchpad work. Straight
+// from the résumé: agency-era launches. Big bold numbers = the page's wow hero.
+// Colours inherit the page --accent (cyan); black borders + hard shadow.
+const stats = [
+  { n: "$4M+", label: "NFT sales" },
+  { n: "5,000+", label: "unique holders" },
+  { n: "80", label: "token launches" },
+  { n: "$300K+", label: "raised" },
+];
+---
+
+<div class="cstats">
+  <span class="cstats__eyebrow">◆ By the numbers</span>
+  <ul class="cstats__grid">
+    {
+      stats.map((s) => (
+        <li class="cstats__cell">
+          <span class="cstats__n">{s.n}</span>
+          <span class="cstats__label">{s.label}</span>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .cstats {
+    border: var(--bw) solid var(--c-black);
+    box-shadow: 8px 8px 0 0 rgba(0, 0, 0, 0.5);
+    background: var(--c-white);
+    overflow: hidden;
+  }
+  .cstats__eyebrow {
+    display: block;
+    padding: 0.8rem 1rem;
+    background: var(--c-black);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    color: var(--accent, var(--c-gold));
+  }
+  .cstats__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    list-style: none;
+  }
+  .cstats__cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: clamp(1.1rem, 2.4vw, 1.9rem) clamp(0.9rem, 1.8vw, 1.3rem);
+    border-right: 2px solid var(--c-black);
+  }
+  .cstats__cell:last-child { border-right: none; }
+  .cstats__n {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.4vw, 3.4rem);
+    line-height: 0.95;
+    color: var(--accent, var(--c-gold));
+  }
+  .cstats__label {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--c-black) 62%, transparent);
+  }
+
+  @media (max-width: 620px) {
+    .cstats__grid { grid-template-columns: repeat(2, 1fr); }
+    .cstats__cell:nth-child(2) { border-right: none; }
+    .cstats__cell:nth-child(1),
+    .cstats__cell:nth-child(2) { border-bottom: 2px solid var(--c-black); }
+  }
+</style>

@@ -1,0 +1,111 @@
+---
+// Cryptoware — OASISX marketplace. Escrow-less, approvals-based P2P trading: the
+// seller signs an EIP-712 order off-chain (no gas), a buyer fulfils it, and the
+// settlement contract verifies the signature and atomically moves the NFT and
+// splits payment across seller / platform fee / royalty. (Seaport / 0x lineage.)
+---
+
+<figure class="diag">
+  <svg viewBox="0 0 980 500" role="img" aria-label="A seller signs an EIP-712 order off-chain; a buyer fulfils it; the settlement contract verifies the signature and atomically moves the NFT and splits payment across seller, platform fee and royalty.">
+    <defs>
+      <marker id="cmah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#000" />
+      </marker>
+    </defs>
+
+    <!-- top row -->
+    <g class="node">
+      <rect x="44" y="40" width="236" height="86" rx="4" />
+      <text class="t-md" x="162" y="80">SELLER</text>
+      <text class="t-sm" x="162" y="103">keeps NFT · grants approval</text>
+    </g>
+    <g class="node">
+      <rect x="372" y="40" width="236" height="86" rx="4" />
+      <text class="t-md" x="490" y="80">ORDERBOOK</text>
+      <text class="t-sm" x="490" y="103">off-chain signed order</text>
+    </g>
+    <g class="node">
+      <rect x="700" y="40" width="236" height="86" rx="4" />
+      <text class="t-md" x="818" y="80">BUYER</text>
+      <text class="t-sm" x="818" y="103">fulfils the order</text>
+    </g>
+    <path class="edge" d="M280 83 L368 83" marker-end="url(#cmah)" />
+    <text class="e-lbl" x="324" y="28">EIP-712 · no gas</text>
+    <path class="edge" d="M608 83 L696 83" marker-end="url(#cmah)" />
+    <text class="e-lbl" x="652" y="28">broadcast</text>
+
+    <!-- settlement -->
+    <g class="node node--accent">
+      <rect x="330" y="200" width="320" height="120" rx="4" />
+      <text class="t-md" x="490" y="238">SETTLEMENT CONTRACT</text>
+      <text class="t-sm" x="490" y="262">verify EIP-712 sig · ~3k gas</text>
+      <text class="t-xs" x="490" y="284">check nonce · expiry · cancel</text>
+      <text class="t-xs" x="490" y="304">atomic: NFT → buyer + split pay</text>
+    </g>
+    <path class="edge" d="M770 128 L606 198" marker-end="url(#cmah)" />
+    <text class="e-lbl" x="712" y="165">fulfill(order, sig)</text>
+
+    <!-- payment split -->
+    <g class="node">
+      <rect x="60" y="388" width="260" height="74" rx="4" />
+      <text class="t-reg" x="190" y="420">→ SELLER</text>
+      <text class="t-xs" x="190" y="442">sale proceeds</text>
+    </g>
+    <g class="node">
+      <rect x="360" y="388" width="260" height="74" rx="4" />
+      <text class="t-reg" x="490" y="420">→ PLATFORM FEE</text>
+      <text class="t-xs" x="490" y="442">treasury</text>
+    </g>
+    <g class="node">
+      <rect x="660" y="388" width="260" height="74" rx="4" />
+      <text class="t-reg" x="790" y="420">→ ROYALTY</text>
+      <text class="t-xs" x="790" y="442">EIP-2981 receiver</text>
+    </g>
+    <path class="edge" d="M430 320 L215 386" marker-end="url(#cmah)" />
+    <path class="edge" d="M490 320 L490 386" marker-end="url(#cmah)" />
+    <path class="edge" d="M550 320 L775 386" marker-end="url(#cmah)" />
+
+    <text class="note" x="490" y="490">Escrow-less — the NFT stays in the seller's wallet via an approval until the atomic fill; nothing is locked.</text>
+  </svg>
+</figure>
+
+<style>
+  .diag { margin: 0; }
+  .diag svg { width: 100%; height: auto; display: block; background: var(--c-white); }
+  .node rect { fill: var(--c-white); stroke: var(--c-black); stroke-width: 3; }
+  .node--accent rect { fill: var(--accent, var(--c-gold)); }
+  .node text { fill: var(--c-black); text-anchor: middle; font-family: var(--font-display); }
+  .t-md { font-size: 24px; }
+  .t-reg { font-size: 20px; fill: var(--c-black); text-anchor: middle; font-family: var(--font-display); }
+  .t-sm {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 14px;
+    fill: color-mix(in srgb, var(--c-black) 72%, transparent);
+    text-anchor: middle;
+  }
+  .t-xs {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 12.5px;
+    fill: color-mix(in srgb, var(--c-black) 66%, transparent);
+    text-anchor: middle;
+  }
+  .edge { fill: none; stroke: var(--c-black); stroke-width: 2.5; }
+  .e-lbl {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 13px;
+    fill: var(--c-black);
+    text-anchor: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .note {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 13.5px;
+    fill: color-mix(in srgb, var(--c-black) 64%, transparent);
+    text-anchor: middle;
+  }
+</style>
